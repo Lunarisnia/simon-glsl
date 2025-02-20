@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import fragmentShader from "./shaders/mixing.frag?raw"
+import fragmentShader from "./shaders/textures.frag?raw"
 import vertexShader from "./shaders/vertex-shaders.vert?raw"
 
 var container;
@@ -32,12 +32,17 @@ function init() {
 		new THREE.Float32BufferAttribute(colorFloats, 3),
 	);
 
+	const loader = new THREE.TextureLoader();
+	const dogTexture = loader.load("./textures/dog.jpg");
+
 	uniforms = {
 		u_time: { type: "f", value: 1.0 },
 		u_resolution: { type: "v2", value: new THREE.Vector2() },
 		u_mouse: { type: "v2", value: new THREE.Vector2() },
 		colour1: { type: "v3", value: new THREE.Vector3(1.0, 1.0, 0.0) },
 		colour2: { type: "v3", value: new THREE.Vector3(0.0, 1.0, 1.0) },
+		diffuse: { value: dogTexture },
+		tint: { value: new THREE.Vector3(0.0, 0.0, 1.0) },
 	};
 
 	var material = new THREE.ShaderMaterial({
