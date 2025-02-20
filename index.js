@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import testShader from "./shaders/test.frag?raw"
+import fragmentShader from "./shaders/mixing.frag?raw"
+import vertexShader from "./shaders/vertex-shaders.vert?raw"
 
 var container;
 var camera, scene, renderer, clock;
@@ -17,18 +18,32 @@ function init() {
 	scene = new THREE.Scene();
 	clock = new THREE.Clock();
 
+	const colors = [
+		new THREE.Color(0xFF0000),
+		new THREE.Color(0x00FF00),
+		new THREE.Color(0x0000FF),
+		new THREE.Color(0xFF00FF),
+	];
+	const colorFloats = colors.map((c) => c.toArray()).flat();
+
 	var geometry = new THREE.PlaneGeometry(2, 2);
+	geometry.setAttribute(
+		"simondevColours",
+		new THREE.Float32BufferAttribute(colorFloats, 3),
+	);
 
 	uniforms = {
 		u_time: { type: "f", value: 1.0 },
 		u_resolution: { type: "v2", value: new THREE.Vector2() },
-		u_mouse: { type: "v2", value: new THREE.Vector2() }
+		u_mouse: { type: "v2", value: new THREE.Vector2() },
+		colour1: { type: "v3", value: new THREE.Vector3(1.0, 1.0, 0.0) },
+		colour2: { type: "v3", value: new THREE.Vector3(0.0, 1.0, 1.0) },
 	};
 
 	var material = new THREE.ShaderMaterial({
 		uniforms: uniforms,
-		//vertexShader: document.getElementById('vertexShader').textContent,
-		fragmentShader: testShader,
+		vertexShader: vertexShader,
+		fragmentShader: fragmentShader,
 	});
 
 	var mesh = new THREE.Mesh(geometry, material);
