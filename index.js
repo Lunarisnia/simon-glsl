@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import fragmentShader from "./shaders/textures.frag?raw"
+import fragmentShader from "./shaders/rainbow.frag?raw"
 import vertexShader from "./shaders/vertex-shaders.vert?raw"
 
 var container;
