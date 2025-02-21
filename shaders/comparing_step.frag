@@ -7,6 +7,7 @@ void main() {
     float value = uv.x;
     float smoothedValue = smoothstep(0.0, 1.0, value);
     float hardValue = smoothstep(0.66, 1.0, value);
+    float hardLineStep = step(0.5, value);
 
     float line1 = smoothstep(lineThickness.x, lineThickness.y, abs(uv.y - 0.33));
     float line2 = smoothstep(lineThickness.x, lineThickness.y, abs(uv.y - 0.66));
@@ -16,6 +17,9 @@ void main() {
     float hardLine2 = smoothstep(lineThickness.x, lineThickness.y, abs(uv.y - 1.0));
     float hardLine3 = smoothstep(lineThickness.x, lineThickness.y, abs(uv.x - 0.5));
     float mixedHardLine = mix(hardLine1, hardLine2, step(0.5, uv.x));
+
+    // This is the ideal way to visualize step
+    float hardLine4 = smoothstep(lineThickness.x, lineThickness.y, abs(uv.y - mix(0.66, 1.0, hardLineStep)));
 
     vec3 red = vec3(1.0, 0.0, 0.0);
     vec3 blue = vec3(0.0, 0.0, 1.0);
@@ -35,7 +39,7 @@ void main() {
     color = mix(white, color, line2);
     color = mix(green, color, linearLine);
     color = mix(green, color, smoothLine);
-    color = mix(green, color, mixedHardLine);
+    color = mix(green, color, hardLine4);
 
     gl_FragColor = vec4(color, 1.0);
 }

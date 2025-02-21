@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import fragmentShader from "./shaders/custom_clamp.frag?raw"
+import fragmentShader from "./shaders/comparing_step.frag?raw"
 import vertexShader from "./shaders/vertex-shaders.vert?raw"
 
 var container;
@@ -40,7 +40,7 @@ function init() {
 
 	uniforms = {
 		u_time: { type: "f", value: 1.0 },
-		u_resolution: { type: "v2", value: new THREE.Vector2() },
+		u_resolution: { type: "v2", value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
 		u_mouse: { type: "v2", value: new THREE.Vector2() },
 		colour1: { type: "v3", value: new THREE.Vector3(1.0, 1.0, 0.0) },
 		colour2: { type: "v3", value: new THREE.Vector3(0.0, 1.0, 1.0) },

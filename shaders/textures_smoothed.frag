@@ -6,7 +6,7 @@ void main() {
     vec2 uv = vUv;
 
     vec4 color = texture2D(diffuse, uv);
-    color.x = smoothstep(0.0, 1.0, uv.x);
+    // color.x = smoothstep(0.0, 1.0, uv.x);
 
-    gl_FragColor = color;
+    gl_FragColor = smoothstep(vec4(0.0), vec4(1.0), color);
 }
