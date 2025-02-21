@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import fragmentShader from "./shaders/rainbow.frag?raw"
+import fragmentShader from "./shaders/comparing_step.frag?raw"
 import vertexShader from "./shaders/vertex-shaders.vert?raw"
 
 var container;
@@ -34,6 +34,9 @@ function init() {
 
 	const loader = new THREE.TextureLoader();
 	const dogTexture = loader.load("./textures/dog.jpg");
+	// Wrap mode
+	//dogTexture.wrapS = THREE.MirroredRepeatWrapping;
+	//dogTexture.wrapT = THREE.RepeatWrapping;
 
 	uniforms = {
 		u_time: { type: "f", value: 1.0 },
