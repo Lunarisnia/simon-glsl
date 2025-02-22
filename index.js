@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import fragmentShader from "./shaders/comparing_step.frag?raw"
+import fragmentShader from "./shaders/crt.frag?raw"
 import vertexShader from "./shaders/vertex-shaders.vert?raw"
 
 var container;
