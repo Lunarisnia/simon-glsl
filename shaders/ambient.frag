@@ -2,6 +2,8 @@ varying vec2 vUv;
 varying vec3 vNormal;
 varying vec3 vPosition;
 
+uniform samplerCube specMap;
+
 float inverseLerp(float v, float minValue, float maxValue) {
     return (v - minValue) / (maxValue - minValue);
 }
@@ -39,7 +41,19 @@ void main() {
 
     vec3 specular = vec3(phongValue);
 
-    vec3 baseColor = vec3(0.3);
+    // IBL Specular (Background Specular)
+    vec3 iblCoord = normalize(reflect(-viewDir, normal));
+    vec3 iblSample = textureCube(specMap, iblCoord).xyz;
+
+    specular += iblSample * 0.5;
+
+    // Fresnel
+    float fresnelValue = 1.0 - dot(viewDir, normal);
+    fresnelValue = pow(fresnelValue, 1.4);
+
+    specular *= fresnelValue;
+
+    vec3 baseColor = vec3(0.8, 0.0, 0.3);
     vec3 lighting = vec3(0.0);
     lighting = ambient * 0.0 + hemiLight * 0.9 + diffuse * 1.0;
 
@@ -47,4 +61,5 @@ void main() {
     color = pow(color, vec3(1.0 / 2.2));
 
     gl_FragColor = vec4(color, 1.0);
+    // gl_FragColor = vec4(vec3(fresnelValue), 1.0);
 }

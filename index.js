@@ -49,6 +49,9 @@ class SimonDevGLSLCourse {
 
 		const material = new THREE.ShaderMaterial({
 			uniforms: {
+				specMap: {
+					value: this.scene_.background,
+				}
 			},
 			vertexShader: await vsh.text(),
 			fragmentShader: await fsh.text()
