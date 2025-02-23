@@ -1,0 +1,40 @@
+varying vec2 vUv;
+varying vec3 vNormal;
+
+float inverseLerp(float v, float minValue, float maxValue) {
+    return (v - minValue) / (maxValue - minValue);
+}
+
+float remap(float v, float inMin, float inMax, float outMin, float outMax) {
+    float t = inverseLerp(v, inMin, inMax);
+    return mix(outMin, outMax, t);
+}
+
+void main() {
+    vec2 uv = vUv;
+    vec3 normal = normalize(vNormal);
+
+    vec3 purple = vec3(0.0, 0.3, 0.6);
+    vec3 lightBlue = vec3(0.6, 0.3, 0.1);
+
+    // Ambient light
+    vec3 ambient = vec3(0.5);
+
+    // Hemisphere light
+    float remappedNormal = remap(normal.y, -1.0, 1.0, 0.0, 1.0);
+    vec3 hemiLight = mix(purple, lightBlue, remappedNormal);
+
+    // Lambertian lighting
+    vec3 lightColor = vec3(0.8);
+    vec3 lightDirection = normalize(vec3(1.0, 1.0, 0.0));
+    float dp = max(0.0, dot(normal, lightDirection));
+    vec3 diffuse = dp * lightColor;
+
+    vec3 baseColor = vec3(0.3);
+    vec3 lighting = vec3(0.0);
+    lighting = ambient * 0.0 + hemiLight * 1.0 + diffuse;
+
+    vec3 color = baseColor * lighting;
+
+    gl_FragColor = vec4(color, 1.0);
+}
