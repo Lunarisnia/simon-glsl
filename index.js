@@ -45,7 +45,9 @@ class SimonDevGLSLCourse {
 
 	async setupProject_() {
 		const vsh = await fetch('./shaders/vertex-shaders.vert');
-		const fsh = await fetch('./shaders/ambient.frag');
+		const vsh2 = await fetch('./shaders/vertex-shaders.vert');
+		const fsh = await fetch('./shaders/blin_phong.frag');
+		const fsh2 = await fetch('./shaders/ambient.frag');
 
 		const material = new THREE.ShaderMaterial({
 			uniforms: {
@@ -56,6 +58,15 @@ class SimonDevGLSLCourse {
 			vertexShader: await vsh.text(),
 			fragmentShader: await fsh.text()
 		});
+		const material2 = new THREE.ShaderMaterial({
+			uniforms: {
+				specMap: {
+					value: this.scene_.background,
+				}
+			},
+			vertexShader: await vsh2.text(),
+			fragmentShader: await fsh2.text()
+		});
 
 		const loader = new GLTFLoader();
 		loader.setPath('./resources/');
@@ -63,7 +74,15 @@ class SimonDevGLSLCourse {
 			gltf.scene.traverse(c => {
 				c.material = material;
 			});
+			//gltf.scene.position.set(-1.5, 0, 0);
 			this.scene_.add(gltf.scene);
+		});
+		loader.load('suzanne.glb', (gltf) => {
+			gltf.scene.traverse(c => {
+				c.material = material2;
+			});
+			gltf.scene.position.set(1.5, 0, 0);
+			//this.scene_.add(gltf.scene);
 		});
 
 		this.onWindowResize_();
