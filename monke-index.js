@@ -44,27 +44,46 @@ class SimonDevGLSLCourse {
 	}
 
 	async setupProject_() {
-		this.clock = new THREE.Clock();
-		this.u_time = {
-			value: 0.0,
-		}
 		const vsh = await fetch('./shaders/vertex-shaders.vert');
-		const fsh = await fetch('./shaders/blink.frag');
+		const vsh2 = await fetch('./shaders/vertex-shaders.vert');
+		const fsh = await fetch('./shaders/blin_phong.frag');
+		const fsh2 = await fetch('./shaders/ambient.frag');
 
 		const material = new THREE.ShaderMaterial({
 			uniforms: {
 				specMap: {
 					value: this.scene_.background,
-				},
-				u_time: this.u_time,
+				}
 			},
 			vertexShader: await vsh.text(),
 			fragmentShader: await fsh.text()
 		});
+		const material2 = new THREE.ShaderMaterial({
+			uniforms: {
+				specMap: {
+					value: this.scene_.background,
+				}
+			},
+			vertexShader: await vsh2.text(),
+			fragmentShader: await fsh2.text()
+		});
 
-		const cube = new THREE.BoxGeometry(1, 1);
-		const cubeMesh = new THREE.Mesh(cube, material);
-		this.scene_.add(cubeMesh);
+		const loader = new GLTFLoader();
+		loader.setPath('./resources/');
+		loader.load('suzanne.glb', (gltf) => {
+			gltf.scene.traverse(c => {
+				c.material = material;
+			});
+			//gltf.scene.position.set(-1.5, 0, 0);
+			this.scene_.add(gltf.scene);
+		});
+		loader.load('suzanne.glb', (gltf) => {
+			gltf.scene.traverse(c => {
+				c.material = material2;
+			});
+			gltf.scene.position.set(1.5, 0, 0);
+			//this.scene_.add(gltf.scene);
+		});
 
 		this.onWindowResize_();
 	}
@@ -78,7 +97,6 @@ class SimonDevGLSLCourse {
 
 	raf_() {
 		requestAnimationFrame((t) => {
-			this.u_time.value += this.clock.getDelta();
 			this.threejs_.render(this.scene_, this.camera_);
 			this.raf_();
 		});
