@@ -1,6 +1,7 @@
 varying vec2 vUv;
 varying vec3 vNormal;
 varying vec3 vPosition;
+varying vec3 vColour;
 
 uniform samplerCube specMap;
 
@@ -15,7 +16,10 @@ float remap(float v, float inMin, float inMax, float outMin, float outMax) {
 
 void main() {
     vec2 uv = vUv;
-    vec3 normal = normalize(vNormal);
+    vec3 normal = normalize(cross(
+                dFdx(vPosition.xyz),
+                dFdy(vPosition.xyz)
+            ));
     vec3 viewDir = normalize(cameraPosition - vPosition);
 
     vec3 purple = vec3(0.0, 0.3, 0.6);
@@ -53,7 +57,7 @@ void main() {
 
     specular *= fresnelValue;
 
-    vec3 baseColor = vec3(0.8, 0.0, 0.3);
+    vec3 baseColor = vColour;
     vec3 lighting = vec3(0.0);
     lighting = ambient * 0.0 + hemiLight * 0.9 + diffuse * 1.0;
 

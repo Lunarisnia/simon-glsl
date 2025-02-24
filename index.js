@@ -48,8 +48,8 @@ class SimonDevGLSLCourse {
 		this.u_time = {
 			value: 0.0,
 		}
-		const vsh = await fetch('./shaders/vertex-shaders.vert');
-		const fsh = await fetch('./shaders/blink.frag');
+		const vsh = await fetch('./shaders/pop-in.vert');
+		const fsh = await fetch('./shaders/ambient.frag');
 
 		const material = new THREE.ShaderMaterial({
 			uniforms: {
@@ -62,7 +62,7 @@ class SimonDevGLSLCourse {
 			fragmentShader: await fsh.text()
 		});
 
-		const cube = new THREE.BoxGeometry(1, 1);
+		const cube = new THREE.IcosahedronGeometry(1, 128);
 		const cubeMesh = new THREE.Mesh(cube, material);
 		this.scene_.add(cubeMesh);
 
