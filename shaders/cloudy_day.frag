@@ -87,9 +87,32 @@ vec3 moon(vec2 pixelCoords, vec3 color, float moonRadius, float time) {
     return color;
 }
 
-vec3 drawBackground() {
-    float t = vUv.x;
-    return mix(vec3(0.6, 0.4, 0.9), vec3(0.2, 0.2, 0.8), t);
+vec3 drawBackground(float time) {
+    // rgb(1, 82, 148)
+    // rgb(21, 146, 209)
+    // rgb(142, 191, 224)
+    const float MAX = 255.0;
+    const vec3 md1 = vec3(1.0, 82.0, 148.0) / MAX;
+    const vec3 md2 = vec3(142.0, 191.0, 224.0) / MAX;
+
+    // rgb(255, 138, 102)
+    // rgb(254, 229, 119)
+    const vec3 ss1 = vec3(255.0, 138.0, 102.0) / MAX;
+    const vec3 ss2 = vec3(254.0, 229.0, 119.0) / MAX;
+
+    // rgb(40, 16, 54)
+    // rgb(29, 29, 67)
+    const vec3 n1 = vec3(29.0, 29.0, 67.0) / MAX;
+    const vec3 n2 = vec3(40.0, 16.0, 54.0) / MAX;
+
+    float t = 1.0 - vUv.y;
+    vec3 midday = mix(md1, md2, t);
+    vec3 sunset = mix(ss1, ss2, t);
+    vec3 night = mix(n1, n2, t);
+    return night;
+
+    // float t = vUv.x;
+    // return mix(vec3(0.6, 0.4, 0.9), vec3(0.2, 0.2, 0.8), t);
 }
 
 vec3 drawClouds(vec3 color, vec2 pixelCoords) {
@@ -133,7 +156,7 @@ void main() {
 
     float time = sin(u_time * 0.5);
 
-    vec3 color = drawBackground();
+    vec3 color = drawBackground(time);
     color = drawClouds(color, pixelCoords);
     if (time > 0.0) {
         color = sun(pixelCoords, color, 100.0, time);
