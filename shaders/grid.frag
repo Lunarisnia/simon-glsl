@@ -53,6 +53,17 @@ float sdEquilateralTriangle(in vec2 p, in float r)
     return -length(p) * sign(p.y);
 }
 
+float ndot(vec2 a, vec2 b) {
+    return a.x * b.x - a.y * b.y;
+}
+float sdRhombus(in vec2 p, in vec2 b)
+{
+    p = abs(p);
+    float h = clamp(ndot(b - 2.0 * p, b) / dot(b, b), -1.0, 1.0);
+    float d = length(p - 0.5 * b * vec2(1.0 - h, 1.0 + h));
+    return d * sign(p.x * b.y + p.y * b.x - b.x * b.y);
+}
+
 float softMax(float a, float b, float k) {
     return log(exp(k * a) + exp(k * b)) / k;
 }
@@ -77,8 +88,12 @@ void main() {
 
     float t1 = sdEquilateralTriangle(pixelCoords - vec2(400.0, 0.0), 300.0);
     float t2 = sdEquilateralTriangle(pixelCoords - vec2(400.0, -400.0), 300.0);
+    float r1 = sdRhombus(pixelCoords - vec2(-400.0, 0.0), vec2(200.0, 200.0));
 
-    float unionTd = softMin(d, softMin(t1, t2, 0.02), 0.02);
+    float unionTd = softMin(d,
+            softMin(r1,
+                softMin(t1,
+                    t2, 0.02), 0.02), 0.02);
 
     vec3 sdfColor = mix(RED * 2.0, BLUE, smoothstep(0.0, 1.0, softMinValue(d, unionTd, 0.01)));
 
