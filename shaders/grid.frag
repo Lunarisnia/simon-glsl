@@ -2,6 +2,7 @@ varying vec2 vUv;
 
 uniform vec2 u_resolution;
 uniform float u_time;
+uniform vec2 u_mouse;
 
 const vec3 RED = vec3(0.9, 0.3, 0.2);
 const vec3 BLUE = vec3(0.2, 0.23, 0.95);
@@ -68,13 +69,13 @@ void main() {
     color = drawGrid(color, vec3(0.6), 10.0, 1.0);
     color = drawGrid(color, vec3(0.0), 100.0, 3.0);
 
-    float d = sdfCircle(pixelCoords, 300.0);
+    float d = sdfCircle(pixelCoords - u_mouse, 300.0);
 
     float t1 = sdEquilateralTriangle(pixelCoords - vec2(400.0, 0.0), 300.0);
     float t2 = sdEquilateralTriangle(pixelCoords - vec2(400.0, -400.0), 300.0);
 
-    float unionTd = softMin(d, softMin(t1, t2, 0.05), 0.005);
-    // color = mix(BLUE * 0.5, color, smoothstep(-1.0, 1.0, unionTd));
+    float unionTd = softMin(d, softMin(t1, t2, 0.02), 0.02);
+    color = mix(BLUE * 0.5, color, smoothstep(-1.0, 1.0, unionTd));
     color = mix(BLUE, color, smoothstep(-8.0, 0.0, unionTd));
 
     gl_FragColor = vec4(color, 1.0);

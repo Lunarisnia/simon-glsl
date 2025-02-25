@@ -66,8 +66,10 @@ function init() {
 	window.addEventListener('resize', onWindowResize, false);
 
 	document.onmousemove = function(e) {
-		uniforms.u_mouse.value.x = e.pageX
-		uniforms.u_mouse.value.y = e.pageY
+		uniforms.u_mouse.value.x = ((e.clientX / window.innerWidth) * 2 - 1) * window.innerWidth;
+		uniforms.u_mouse.value.y = (-(e.clientY / window.innerHeight) * 2 + 1) * window.innerHeight;
+		console.log("MousePos: ", uniforms.u_mouse.value);
+		console.log("Resolution: ", uniforms.u_resolution.value);
 	}
 }
 
