@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import fragmentShader from "./shaders/grid.frag?raw"
+import fragmentShader from "./shaders/cloudy_day.frag?raw"
 import vertexShader from "./shaders/vertex-shaders.vert?raw"
 
 var container;
@@ -68,8 +68,6 @@ function init() {
 	document.onmousemove = function(e) {
 		uniforms.u_mouse.value.x = ((e.clientX / window.innerWidth) * 2 - 1) * window.innerWidth;
 		uniforms.u_mouse.value.y = (-(e.clientY / window.innerHeight) * 2 + 1) * window.innerHeight;
-		console.log("MousePos: ", uniforms.u_mouse.value);
-		console.log("Resolution: ", uniforms.u_resolution.value);
 	}
 }
 
