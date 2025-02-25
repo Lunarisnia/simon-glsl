@@ -58,6 +58,35 @@ vec3 cloud(vec2 pixelCoords, vec3 color, vec3 cloudRadiuses) {
     return color;
 }
 
+vec3 sun(vec2 pixelCoords, vec3 color, float sunRadius, float time) {
+    const vec3 SUN_COLOR = vec3(1.0, 0.9, 0.1);
+    const vec3 SHINE_COLOR = vec3(1.0, 1.0, 0.2);
+
+    vec2 sunPosition = vec2(-600.0, remap(-time, -1.0, 1.0, 450.0, 1400.0));
+    float c = sdCircle(pixelCoords - sunPosition, sunRadius);
+
+    color = mix(SHINE_COLOR, color, smoothstep(0.0, 140.0, c));
+    color = mix(SUN_COLOR, color, smoothstep(-1.0, 1.0, c));
+
+    return color;
+}
+
+vec3 moon(vec2 pixelCoords, vec3 color, float moonRadius, float time) {
+    const vec3 MOON_COLOR = vec3(1.0, 0.9, 0.8);
+    const vec3 SHINE_COLOR = vec3(1.0, 1.0, 0.2);
+
+    vec2 moonPosition = vec2(500.0, remap(time, -1.0, 1.0, 400.0, 1450.0));
+    // vec2 moonPosition = vec2(0.0);
+    float c = sdCircle(pixelCoords - moonPosition, moonRadius);
+    float c1 = sdCircle(pixelCoords - moonPosition - vec2(-75.0, 30.0), moonRadius);
+    float intersected = sdIntersect(c, -c1);
+
+    color = mix(SHINE_COLOR, color, smoothstep(-90.0, 25.0, intersected));
+    color = mix(MOON_COLOR, color, smoothstep(-1.0, 1.0, intersected));
+
+    return color;
+}
+
 vec3 drawBackground() {
     float t = vUv.x;
     return mix(vec3(0.6, 0.4, 0.9), vec3(0.2, 0.2, 0.8), t);
@@ -83,7 +112,7 @@ vec3 drawClouds(vec3 color, vec2 pixelCoords) {
     }
 
     for (int i = 0; i < 30; i++) {
-        vec3 c = cloud(pixelCoords - vec2(10.0 - float(i) * 1000.0 + (u_time * -10.0), -289.0), color, mediumCloud);
+        vec3 c = cloud(pixelCoords - vec2(float(i) * -1000.0 + (u_time * 40.0), -289.0), color, mediumCloud.xzy);
         color = c;
     }
 
@@ -102,12 +131,15 @@ vec3 drawClouds(vec3 color, vec2 pixelCoords) {
 void main() {
     vec2 pixelCoords = (vUv - 0.5) * u_resolution;
 
+    float time = sin(u_time * 0.5);
+
     vec3 color = drawBackground();
-    // vec3 c = cloud(pixelCoords, color);
-    // color = c;
-    // color = mix(vec3(0.0), color, smoothstep(-9.0, 20.0, c));
-    // color = mix(vec3(1.0), color, smoothstep(-1.0, 1.00, c));
     color = drawClouds(color, pixelCoords);
+    if (time > 0.0) {
+        color = sun(pixelCoords, color, 100.0, time);
+    } else {
+        color = moon(pixelCoords, color, 100.0, time);
+    }
 
     gl_FragColor = vec4(color, 1.0);
 }
