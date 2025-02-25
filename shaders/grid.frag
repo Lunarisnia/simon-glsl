@@ -61,6 +61,10 @@ float softMin(float a, float b, float k) {
     return -softMax(-a, -b, k);
 }
 
+float softMinValue(float a, float b, float k) {
+    return exp(-b * k) / (exp(-a * k) + exp(-b * k));
+}
+
 void main() {
     vec2 uv = vUv;
     vec2 pixelCoords = (uv - 0.5) * u_resolution;
@@ -75,8 +79,11 @@ void main() {
     float t2 = sdEquilateralTriangle(pixelCoords - vec2(400.0, -400.0), 300.0);
 
     float unionTd = softMin(d, softMin(t1, t2, 0.02), 0.02);
-    color = mix(BLUE * 0.5, color, smoothstep(-1.0, 1.0, unionTd));
-    color = mix(BLUE, color, smoothstep(-8.0, 0.0, unionTd));
+
+    vec3 sdfColor = mix(RED * 2.0, BLUE, smoothstep(0.0, 1.0, softMinValue(d, unionTd, 0.01)));
+
+    color = mix(sdfColor * 0.5, color, smoothstep(-1.0, 1.0, unionTd));
+    color = mix(sdfColor, color, smoothstep(-8.0, 0.0, unionTd));
 
     gl_FragColor = vec4(color, 1.0);
 }
