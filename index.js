@@ -1,94 +1,88 @@
 import * as THREE from 'three';
+import fragmentShader from "./shaders/grid.frag?raw"
+import vertexShader from "./shaders/vertex-shaders.vert?raw"
 
-import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.136/examples/jsm/loaders/GLTFLoader.js';
-import { OrbitControls } from 'https://cdn.skypack.dev/three@0.136/examples/jsm/controls/OrbitControls.js';
+var container;
+var camera, scene, renderer, clock;
+var uniforms;
 
+init();
+animate();
 
-class SimonDevGLSLCourse {
-	constructor() {
-	}
+function init() {
+	container = document.getElementById('container');
 
-	async initialize() {
-		this.threejs_ = new THREE.WebGLRenderer();
-		document.body.appendChild(this.threejs_.domElement);
+	camera = new THREE.Camera();
+	camera.position.z = 1;
 
-		window.addEventListener('resize', () => {
-			this.onWindowResize_();
-		}, false);
+	scene = new THREE.Scene();
+	clock = new THREE.Clock();
 
-		this.scene_ = new THREE.Scene();
+	const colors = [
+		new THREE.Color(0xFF0000),
+		new THREE.Color(0x00FF00),
+		new THREE.Color(0x0000FF),
+		new THREE.Color(0xFF00FF),
+	];
+	const colorFloats = colors.map((c) => c.toArray()).flat();
 
-		this.camera_ = new THREE.PerspectiveCamera(60, 1920.0 / 1080.0, 0.1, 1000.0);
-		this.camera_.position.set(1, 0, 3);
+	var geometry = new THREE.PlaneGeometry(2, 2);
+	geometry.setAttribute(
+		"simondevColours",
+		new THREE.Float32BufferAttribute(colorFloats, 3),
+	);
 
-		const controls = new OrbitControls(this.camera_, this.threejs_.domElement);
-		controls.target.set(0, 0, 0);
-		controls.update();
+	const loader = new THREE.TextureLoader();
+	const dogTexture = loader.load("./textures/dog.jpg");
+	// Wrap mode
+	//dogTexture.wrapS = THREE.MirroredRepeatWrapping;
+	//dogTexture.wrapT = THREE.RepeatWrapping;
 
-		const loader = new THREE.CubeTextureLoader();
-		const texture = loader.load([
-			'./resources/Cold_Sunset__Cam_2_Left+X.png',
-			'./resources/Cold_Sunset__Cam_3_Right-X.png',
-			'./resources/Cold_Sunset__Cam_4_Up+Y.png',
-			'./resources/Cold_Sunset__Cam_5_Down-Y.png',
-			'./resources/Cold_Sunset__Cam_0_Front+Z.png',
-			'./resources/Cold_Sunset__Cam_1_Back-Z.png',
-		]);
+	uniforms = {
+		u_time: { type: "f", value: 1.0 },
+		u_resolution: { type: "v2", value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+		u_mouse: { type: "v2", value: new THREE.Vector2() },
+		colour1: { type: "v3", value: new THREE.Vector3(1.0, 1.0, 0.0) },
+		colour2: { type: "v3", value: new THREE.Vector3(0.0, 1.0, 1.0) },
+		diffuse: { value: dogTexture },
+		tint: { value: new THREE.Vector3(0.0, 0.0, 1.0) },
+	};
 
-		this.scene_.background = texture;
+	var material = new THREE.ShaderMaterial({
+		uniforms: uniforms,
+		vertexShader: vertexShader,
+		fragmentShader: fragmentShader,
+	});
 
-		await this.setupProject_();
+	var mesh = new THREE.Mesh(geometry, material);
+	scene.add(mesh);
 
-		this.onWindowResize_();
-		this.raf_();
-	}
+	renderer = new THREE.WebGLRenderer();
+	renderer.setPixelRatio(window.devicePixelRatio);
 
-	async setupProject_() {
-		this.clock = new THREE.Clock();
-		this.u_time = {
-			value: 0.0,
-		}
-		const vsh = await fetch('./shaders/pop-in.vert');
-		const fsh = await fetch('./shaders/ambient.frag');
+	container.appendChild(renderer.domElement);
 
-		const material = new THREE.ShaderMaterial({
-			uniforms: {
-				specMap: {
-					value: this.scene_.background,
-				},
-				u_time: this.u_time,
-			},
-			vertexShader: await vsh.text(),
-			fragmentShader: await fsh.text()
-		});
+	onWindowResize();
+	window.addEventListener('resize', onWindowResize, false);
 
-		const cube = new THREE.IcosahedronGeometry(1, 128);
-		const cubeMesh = new THREE.Mesh(cube, material);
-		this.scene_.add(cubeMesh);
-
-		this.onWindowResize_();
-	}
-
-	onWindowResize_() {
-		this.threejs_.setSize(window.innerWidth, window.innerHeight);
-
-		this.camera_.aspect = window.innerWidth / window.innerHeight;
-		this.camera_.updateProjectionMatrix();
-	}
-
-	raf_() {
-		requestAnimationFrame((t) => {
-			this.u_time.value += this.clock.getDelta();
-			this.threejs_.render(this.scene_, this.camera_);
-			this.raf_();
-		});
+	document.onmousemove = function(e) {
+		uniforms.u_mouse.value.x = e.pageX
+		uniforms.u_mouse.value.y = e.pageY
 	}
 }
 
+function onWindowResize(event) {
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	uniforms.u_resolution.value.x = renderer.domElement.width;
+	uniforms.u_resolution.value.y = renderer.domElement.height;
+}
 
-let APP_ = null;
+function animate() {
+	requestAnimationFrame(animate);
+	render();
+}
 
-window.addEventListener('DOMContentLoaded', async () => {
-	APP_ = new SimonDevGLSLCourse();
-	await APP_.initialize();
-});
+function render() {
+	uniforms.u_time.value += clock.getDelta();
+	renderer.render(scene, camera);
+}
