@@ -66,8 +66,8 @@ function init() {
 	window.addEventListener('resize', onWindowResize, false);
 
 	document.onmousemove = function(e) {
-		uniforms.u_mouse.value.x = ((e.clientX / window.innerWidth) * 2 - 1) * window.innerWidth;
-		uniforms.u_mouse.value.y = (-(e.clientY / window.innerHeight) * 2 + 1) * window.innerHeight;
+		uniforms.u_mouse.value.x = ((e.pageX / window.innerWidth) * 2 - 1) * window.innerWidth;
+		uniforms.u_mouse.value.y = (-(e.pageY / window.innerHeight) * 2 + 1) * window.innerHeight;
 	}
 }
 
