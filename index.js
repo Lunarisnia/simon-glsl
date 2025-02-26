@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import fragmentShader from "./shaders/cloudy_day.frag?raw"
-import vertexShader from "./shaders/vertex-shaders.vert?raw"
+import fragmentShader from "./public/shaders/cloudy_day.frag?raw"
+import vertexShader from "./public/shaders/vertex-shaders.vert?raw"
 
 var container;
 var camera, scene, renderer, clock;
