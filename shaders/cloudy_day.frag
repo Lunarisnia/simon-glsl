@@ -37,6 +37,15 @@ float softMinValue(float a, float b, float k) {
     return exp(-b * k) / (exp(-a * k) + exp(-b * k));
 }
 
+mat2 rotate(float radian) {
+    float c = cos(radian);
+    float s = sin(radian);
+    return mat2(
+        c, -s,
+        s, c
+    );
+}
+
 vec3 cloud(vec2 pixelCoords, vec3 color, vec3 cloudRadiuses) {
     float d1 = sdCircle(pixelCoords, cloudRadiuses.x);
     float d2 = sdCircle(pixelCoords - vec2(cloudRadiuses.x, 0.0), cloudRadiuses.y);
@@ -56,6 +65,20 @@ vec3 cloud(vec2 pixelCoords, vec3 color, vec3 cloudRadiuses) {
     color = mix(vec3(1.0), color, smoothstep(-1.0, 1.00, u));
 
     return color;
+}
+
+float sdStar5(in vec2 p, in float r, in float rf)
+{
+    const vec2 k1 = vec2(0.809016994375, -0.587785252292);
+    const vec2 k2 = vec2(-k1.x, k1.y);
+    p.x = abs(p.x);
+    p -= 2.0 * max(dot(k1, p), 0.0) * k1;
+    p -= 2.0 * max(dot(k2, p), 0.0) * k2;
+    p.x = abs(p.x);
+    p.y -= r;
+    vec2 ba = rf * vec2(-k1.y, k1.x) - vec2(0, 1);
+    float h = clamp(dot(p, ba) / dot(ba, ba), 0.0, r);
+    return length(p - ba * h) * sign(p.y * ba.x - p.x * ba.y);
 }
 
 vec3 sun(vec2 pixelCoords, vec3 color, float sunRadius, float time) {
@@ -155,6 +178,36 @@ vec3 drawClouds(vec3 color, vec2 pixelCoords) {
     return color;
 }
 
+vec3 star(vec3 color, vec2 p, float radian, float radius, float time) {
+    const vec3 STAR_COLOR = vec3(0.98, 0.84, 0.78);
+    const vec3 SHINE_COLOR = vec3(1.0, 1.0, 0.2);
+
+    radius = remap(-time, -1.0, 1.0, 0.0, radius);
+
+    float s = sdStar5(p * rotate(radian), radius, radius / 5.0);
+    if (radius > 0.04) {
+        // color = mix(SHINE_COLOR, color, smoothstep(-10.0, 10.0, s));
+    }
+    color = mix(STAR_COLOR, color, smoothstep(-1.0, 1.0, s));
+    return color;
+}
+
+vec3 drawStars(vec3 color, vec2 pixelCoords, float time) {
+    for (int i = 0; i < 30; i++) {
+        vec2 offset = vec2(900.0 - float(i) * 990.0, 500.0);
+        color = star(color, pixelCoords - offset, (u_time + float(i) * 120.0) * (float(i) * 0.05), 10.0, time);
+    }
+    for (int i = 0; i < 30; i++) {
+        vec2 offset = vec2(700.0 - float(i) * 740.0, 350.0);
+        color = star(color, pixelCoords - offset, (u_time + float(i) * 120.0) * (float(i) * 0.15), 10.0, time);
+    }
+    for (int i = 0; i < 30; i++) {
+        vec2 offset = vec2(980.0 - float(i) * 640.0, 250.0);
+        color = star(color, pixelCoords - offset, (u_time + float(i) * 120.0) * (float(i) * 0.15), 8.0, time);
+    }
+    return color;
+}
+
 void main() {
     vec2 pixelCoords = (vUv - 0.5) * u_resolution;
 
@@ -167,6 +220,7 @@ void main() {
     } else {
         color = moon(pixelCoords, color, 100.0, time);
     }
+    color = drawStars(color, pixelCoords, time);
 
     gl_FragColor = vec4(color, 1.0);
 }
