@@ -105,11 +105,15 @@ vec3 drawBackground(float time) {
     const vec3 n1 = vec3(29.0, 29.0, 67.0) / MAX;
     const vec3 n2 = vec3(40.0, 16.0, 54.0) / MAX;
 
+    time = remap(time, -1.0, 1.0, 0.0, 1.0);
+
     float t = 1.0 - vUv.y;
     vec3 midday = mix(md1, md2, t);
     vec3 sunset = mix(ss1, ss2, t);
     vec3 night = mix(n1, n2, t);
-    return night;
+
+    vec3 mixed = mix(mix(night, sunset, time), midday, time);
+    return mixed;
 
     // float t = vUv.x;
     // return mix(vec3(0.6, 0.4, 0.9), vec3(0.2, 0.2, 0.8), t);
