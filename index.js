@@ -35,6 +35,7 @@ function init() {
 	const loader = new THREE.TextureLoader();
 	const dogTexture = loader.load("./textures/dog.jpg");
 	const onePixel = loader.load("./textures/onepixel.png");
+	onePixel.minFilter = THREE.NearestFilter;
 	onePixel.magFilter = THREE.NearestFilter;
 	// Wrap mode
 	//dogTexture.wrapS = THREE.MirroredRepeatWrapping;
