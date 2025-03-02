@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import fragmentShader from "./public/shaders/cloudy_day.frag?raw"
+import fragmentShader from "./public/shaders/bilinear_filtering.frag?raw"
 import vertexShader from "./public/shaders/vertex-shaders.vert?raw"
 
 var container;
@@ -34,6 +34,8 @@ function init() {
 
 	const loader = new THREE.TextureLoader();
 	const dogTexture = loader.load("./textures/dog.jpg");
+	const onePixel = loader.load("./textures/onepixel.png");
+	onePixel.magFilter = THREE.NearestFilter;
 	// Wrap mode
 	//dogTexture.wrapS = THREE.MirroredRepeatWrapping;
 	//dogTexture.wrapT = THREE.RepeatWrapping;
@@ -45,6 +47,7 @@ function init() {
 		colour1: { type: "v3", value: new THREE.Vector3(1.0, 1.0, 0.0) },
 		colour2: { type: "v3", value: new THREE.Vector3(0.0, 1.0, 1.0) },
 		diffuse: { value: dogTexture },
+		tex: { value: onePixel },
 		tint: { value: new THREE.Vector3(0.0, 0.0, 1.0) },
 	};
 
