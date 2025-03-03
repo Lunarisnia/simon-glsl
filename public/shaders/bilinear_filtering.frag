@@ -260,7 +260,7 @@ void main() {
     phongValue = pow(phongValue, 64.0);
 
     // Speculars
-    vec3 specular = vec3(0.0);
+    vec3 specular = vec3(phongValue);
 
     color = baseColor * lighting + specular;
     color = pow(color, vec3(1.0 / 2.2));

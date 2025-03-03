@@ -48,14 +48,15 @@ class SimonDevGLSLCourse {
 		this.u_time = {
 			value: 0.0,
 		}
-		const vsh = await fetch('./shaders/pop-in.vert');
-		const fsh = await fetch('./shaders/ambient.frag');
+		const vsh = await fetch('./shaders/vertex-shaders.vert');
+		const fsh = await fetch('./shaders/invoker_orb.frag');
 
 		const material = new THREE.ShaderMaterial({
 			uniforms: {
 				specMap: {
 					value: this.scene_.background,
 				},
+				u_resolution: { type: "v2", value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
 				u_time: this.u_time,
 			},
 			vertexShader: await vsh.text(),
