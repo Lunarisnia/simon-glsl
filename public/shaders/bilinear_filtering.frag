@@ -221,7 +221,7 @@ void main() {
     vec2 uv = vUv;
     vec2 pixelCoords = (uv - 0.5) * u_resolution;
 
-    vec3 noiseX = vec3(vUv, u_time * 0.25);
+    vec3 noiseX = vec3(vUv * 5.0, u_time * 0.25);
     // float noiseValue = remap(ridgedFbm(noiseX, 32, 0.5, 2.0), -1.0, 1.0, 0.0, 1.0);
     // float noiseValue = turbulenceFbm(noiseX, 32, 0.5, 2.0);
     // float noiseValue = cellular(noiseX);
@@ -234,10 +234,10 @@ void main() {
     vec3 color = vec3(0.0);
 
     vec3 pixelSize = vec3(0.5 / u_resolution, 0.0);
-    float s1 = turbulenceFbm(noiseX + pixelSize.xzz, 8, 0.5, 2.0);
-    float s2 = turbulenceFbm(noiseX - pixelSize.xzz, 8, 0.5, 2.0);
-    float s3 = turbulenceFbm(noiseX + pixelSize.zyz, 8, 0.5, 2.0);
-    float s4 = turbulenceFbm(noiseX - pixelSize.zyz, 8, 0.5, 2.0);
+    float s1 = fbm(noiseX + pixelSize.xzz, 8, 0.5, 2.0);
+    float s2 = fbm(noiseX - pixelSize.xzz, 8, 0.5, 2.0);
+    float s3 = fbm(noiseX + pixelSize.zyz, 8, 0.5, 2.0);
+    float s4 = fbm(noiseX - pixelSize.zyz, 8, 0.5, 2.0);
     vec3 normal = normalize(vec3(s1 - s2, s3 - s4, 0.001));
 
     // Hemisphere light
@@ -248,7 +248,7 @@ void main() {
 
     // Lambertian light
     vec3 lightColor = vec3(1.0, 0.0, 0.0);
-    vec3 lightDirection = normalize(vec3(1.0, 1.0, 1.0));
+    vec3 lightDirection = normalize(vec3(cos(u_time * 0.003), sin(u_time * 0.25), 1.0));
     float dp = max(0.0, dot(normal, lightDirection));
     vec3 lambertian = lightColor * dp;
 
@@ -260,7 +260,7 @@ void main() {
     phongValue = pow(phongValue, 64.0);
 
     // Speculars
-    vec3 specular = vec3(phongValue);
+    vec3 specular = vec3(0.0);
 
     color = baseColor * lighting + specular;
     color = pow(color, vec3(1.0 / 2.2));
