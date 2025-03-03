@@ -1,4 +1,5 @@
 varying vec2 vUv;
+varying vec3 vPosition;
 
 uniform vec2 u_resolution;
 uniform float u_time;
@@ -220,16 +221,49 @@ void main() {
     vec2 uv = vUv;
     vec2 pixelCoords = (uv - 0.5) * u_resolution;
 
-    vec3 noiseX = vec3(vUv * 20.0, u_time * 0.25);
+    vec3 noiseX = vec3(vUv, u_time * 0.25);
     // float noiseValue = remap(ridgedFbm(noiseX, 32, 0.5, 2.0), -1.0, 1.0, 0.0, 1.0);
     // float noiseValue = turbulenceFbm(noiseX, 32, 0.5, 2.0);
     // float noiseValue = cellular(noiseX);
     // noiseValue = stepped(noiseValue);
     // noiseValue = remap(domainWarping(noiseX), -1.0, 1.0, 0.0, 1.0);
 
+    // float noiseValue = turbulenceFbm(noiseX, 32, 0.5, 2.0);
+
+    vec3 baseColor = vec3(1.0, 25.0, 50.0) / 255.0;
     vec3 color = vec3(0.0);
-    // color = mix(vec3(0.1, 0.1, 0.9), vec3(0.9), noiseValue);
-    color = vec3(noiseValue);
+
+    vec3 pixelSize = vec3(0.5 / u_resolution, 0.0);
+    float s1 = turbulenceFbm(noiseX + pixelSize.xzz, 8, 0.5, 2.0);
+    float s2 = turbulenceFbm(noiseX - pixelSize.xzz, 8, 0.5, 2.0);
+    float s3 = turbulenceFbm(noiseX + pixelSize.zyz, 8, 0.5, 2.0);
+    float s4 = turbulenceFbm(noiseX - pixelSize.zyz, 8, 0.5, 2.0);
+    vec3 normal = normalize(vec3(s1 - s2, s3 - s4, 0.001));
+
+    // Hemisphere light
+    vec3 hemiColor1 = vec3(0.3);
+    vec3 hemiColor2 = vec3(0.9);
+    float remappedNormal = remap(normal.y, -1.0, 1.0, 0.0, 1.0);
+    vec3 hemi = mix(hemiColor1, hemiColor2, remappedNormal);
+
+    // Lambertian light
+    vec3 lightColor = vec3(1.0, 0.0, 0.0);
+    vec3 lightDirection = normalize(vec3(1.0, 1.0, 1.0));
+    float dp = max(0.0, dot(normal, lightDirection));
+    vec3 lambertian = lightColor * dp;
+
+    // Lightings
+    vec3 lighting = hemi + lambertian;
+
+    vec3 r = normalize(reflect(-lightDirection, normal));
+    float phongValue = max(0.0, dot(vec3(0.0, 0.0, 1.0), r));
+    phongValue = pow(phongValue, 64.0);
+
+    // Speculars
+    vec3 specular = vec3(phongValue);
+
+    color = baseColor * lighting + specular;
+    color = pow(color, vec3(1.0 / 2.2));
 
     gl_FragColor = vec4(color, 1.0);
 }
