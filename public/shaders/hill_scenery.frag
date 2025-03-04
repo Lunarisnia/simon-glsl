@@ -89,6 +89,24 @@ vec3 drawBackground() {
     return color;
 }
 
+vec3 drawMountain(vec3 color, vec3 mountainColor, vec2 p, float depth) {
+    vec3 bottomSky = vec3(100, 194, 244) / 255.0;
+
+    float fogFactor = smoothstep(0.0, 8000.0, depth) * 0.5;
+
+    float heightFactor = smoothstep(256.0, -512.0, p.y);
+    heightFactor *= heightFactor;
+    fogFactor = mix(heightFactor, fogFactor, fogFactor);
+
+    mountainColor = mix(mountainColor, bottomSky, smoothstep(0.0, 8000.0, depth) * 0.5);
+
+    float sdMountain = p.y - (fbm(vec3(depth + p.x / 256.0, 22.380, 3.0), 8, 0.5, 2.0) * 256.0);
+    float blur = 1.0 + smoothstep(200.0, 6000.0, depth) * 128.0 + smoothstep(200.0, -1400.0, depth) * 128.0;
+    color = mix(mountainColor, color, smoothstep(0.0, blur, sdMountain));
+
+    return color;
+}
+
 void main() {
     vec2 uv = vUv;
     vec2 pixelCoords = (uv - 0.5) * u_resolution;
@@ -97,24 +115,19 @@ void main() {
 
     vec2 animationOffset = vec2(u_time * 200.0, 0.0);
     vec2 mountainPos = (pixelCoords - vec2(0.0, 400.0)) * 8.0 + animationOffset;
-    float sdMountain = mountainPos.y - (fbm(vec3(mountainPos.x / 256.0, 22.380, 3.0), 8, 0.5, 2.0) * 256.0);
-    color = mix(vec3(0.6), color, smoothstep(0.0, 1.0, sdMountain));
+    color = drawMountain(color, vec3(0.6), mountainPos, 8000.0);
 
     vec2 mountainPos2 = (pixelCoords - vec2(0.0, 250.0)) * 2.0 + animationOffset;
-    float sdMountain2 = mountainPos2.y - (fbm(vec3(mountainPos2.x / 256.0, 22.380, 3.0), 8, 0.5, 2.0) * 256.0);
-    color = mix(vec3(0.5), color, smoothstep(0.0, 1.0, sdMountain2));
+    color = drawMountain(color, vec3(0.5), mountainPos2, 2000.0);
 
     vec2 mountainPos3 = (pixelCoords - vec2(0.0, 0.0)) * 1.0 + animationOffset;
-    float sdMountain3 = mountainPos3.y - (fbm(vec3(mountainPos3.x / 256.0, 22.380, 3.0), 8, 0.5, 2.0) * 256.0);
-    color = mix(vec3(0.4), color, smoothstep(0.0, 1.0, sdMountain3));
+    color = drawMountain(color, vec3(0.4), mountainPos3, 1000.0);
 
     vec2 mountainPos4 = (pixelCoords - vec2(0.0, -250.0)) * 0.5 + animationOffset;
-    float sdMountain4 = mountainPos4.y - (fbm(vec3(mountainPos4.x / 256.0, 22.380, 3.0), 8, 0.5, 2.0) * 256.0);
-    color = mix(vec3(0.3), color, smoothstep(0.0, 1.0, sdMountain4));
+    color = drawMountain(color, vec3(0.3), mountainPos4, 0.0);
 
     vec2 mountainPos5 = (pixelCoords - vec2(0.0, -500.0)) * 0.25 + animationOffset;
-    float sdMountain5 = mountainPos5.y - (fbm(vec3(mountainPos5.x / 256.0, 22.380, 3.0), 8, 0.5, 2.0) * 256.0);
-    color = mix(vec3(0.1), color, smoothstep(0.0, 1.0, sdMountain5));
+    color = drawMountain(color, vec3(0.1), mountainPos5, -200.0);
 
     gl_FragColor = vec4(color, 1.0);
 }
