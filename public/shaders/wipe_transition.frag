@@ -8,14 +8,15 @@ uniform sampler2D tex;
 
 void main() {
     vec2 uv = vUv;
+    vec2 pixelCoords = (uv - 0.5) * u_resolution;
 
     vec4 imageA = texture2D(tex, uv);
     vec4 imageB = texture2D(diffuse, uv);
 
-    float st = uv.x;
+    float animation = u_time * 200.0;
+    float st = (pixelCoords.x - (sin(u_time + pixelCoords.y / 129.0) * 256.0) - 2000.0) + animation;
     vec3 color = vec3(st);
-    color = mix(imageA.xyz, imageB.xyz, step(2.0 - u_time * 0.25, st));
+    color = mix(imageA.xyz, imageB.xyz, step(1.0 - u_time * 0.25, st));
 
     gl_FragColor = vec4(color, 1.0);
-    // gl_FragColor = texture2D(tex, uv);
 }
