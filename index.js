@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import fragmentShader from "./public/shaders/hill_scenery.frag?raw"
+import fragmentShader from "./public/shaders/wipe_transition.frag?raw"
 import vertexShader from "./public/shaders/vertex-shaders.vert?raw"
 
 var container;
