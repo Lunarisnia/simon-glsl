@@ -93,10 +93,12 @@ void main() {
 
     vec3 image1 = texture2D(diffuse, uv).xyz;
     vec3 image2 = texture2D(tex, uv).xyz;
-    float c1 = sdCircle(pixelCoords, 300.0);
+
+    float size = smoothstep(0.0, 15.0, u_time * 0.25) * length(u_resolution) * 0.5;
+    float c1 = sdCircle(pixelCoords, size);
 
     vec3 color = vec3(0.0);
-    color = mix(vec3(1.0), color, smoothstep(0.0, 15.0, c1));
+    color = mix(image1, image2, smoothstep(0.0, 15.0, c1));
 
     gl_FragColor = vec4(color, 1.0);
 }
