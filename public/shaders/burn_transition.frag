@@ -91,13 +91,18 @@ void main() {
     vec2 uv = vUv;
     vec2 pixelCoords = (uv - 0.5) * u_resolution;
 
-    vec3 image1 = texture2D(diffuse, uv).xyz;
+    float noiseSample = fbm(vec3(pixelCoords, 0.0) * 0.005, 8, 0.5, 2.0);
+
+    float size = smoothstep(0.0, 15.0, u_time) * length(u_resolution) * 0.5;
+    float c1 = sdCircle(pixelCoords + (100.0 * noiseSample), size);
+
+    vec2 distortion = noiseSample / u_resolution;
+    vec2 uvDistortion = distortion * 200.0 * smoothstep(180.0, 20.0, c1);
+
+    vec3 image1 = texture2D(diffuse, uv + uvDistortion).xyz;
     vec3 image2 = texture2D(tex, uv).xyz;
 
     vec3 color = image1;
-
-    float size = smoothstep(0.0, 15.0, 5.0) * length(u_resolution) * 0.5;
-    float c1 = sdCircle(pixelCoords, size);
 
     // Shaping function to make darkening effect
     float shadowAmount = 1.0 - exp(-c1 * c1 * 0.001);
