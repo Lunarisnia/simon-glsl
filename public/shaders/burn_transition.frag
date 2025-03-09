@@ -94,11 +94,27 @@ void main() {
     vec3 image1 = texture2D(diffuse, uv).xyz;
     vec3 image2 = texture2D(tex, uv).xyz;
 
-    float size = smoothstep(0.0, 15.0, u_time * 0.25) * length(u_resolution) * 0.5;
+    vec3 color = image1;
+
+    float size = smoothstep(0.0, 15.0, 5.0) * length(u_resolution) * 0.5;
     float c1 = sdCircle(pixelCoords, size);
 
-    vec3 color = vec3(0.0);
-    color = mix(image1, image2, smoothstep(0.0, 15.0, c1));
+    // Shaping function to make darkening effect
+    float shadowAmount = 1.0 - exp(-c1 * c1 * 0.001);
+    color = mix(vec3(0.0), color, shadowAmount);
+
+    vec3 fireColor = vec3(1.0, 0.5, 0.2);
+    float fireAmount = smoothstep(0.0, 30.0, c1);
+    fireAmount = pow(fireAmount, 0.25);
+
+    color = mix(fireColor, color, fireAmount);
+
+    color = mix(image2, color, smoothstep(0.0, 15.0, c1));
+
+    // Add glow
+    float glowAmount = smoothstep(0.0, 32.0, abs(c1));
+    glowAmount = 1.0 - pow(glowAmount, 0.125);
+    color += glowAmount * vec3(1.0, 0.2, 0.05);
 
     gl_FragColor = vec4(color, 1.0);
 }

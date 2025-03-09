@@ -35,6 +35,7 @@ function init() {
 	const loader = new THREE.TextureLoader();
 	const dogTexture = loader.load("./textures/dog.jpg");
 	const onePixel = loader.load("./textures/onepixel.png");
+	const plantTexture = loader.load("./textures/plants.jpg");
 	onePixel.minFilter = THREE.NearestFilter;
 	onePixel.magFilter = THREE.NearestFilter;
 	// Wrap mode
@@ -48,7 +49,7 @@ function init() {
 		colour1: { type: "v3", value: new THREE.Vector3(1.0, 1.0, 0.0) },
 		colour2: { type: "v3", value: new THREE.Vector3(0.0, 1.0, 1.0) },
 		diffuse: { value: dogTexture },
-		tex: { value: onePixel },
+		tex: { value: plantTexture },
 		tint: { value: new THREE.Vector3(0.0, 0.0, 1.0) },
 	};
 
