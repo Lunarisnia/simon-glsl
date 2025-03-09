@@ -108,7 +108,7 @@ void main() {
     vec3 sdfColor = mix(vec3(0.6, 0.12, 0.3), vec3(0.12, 0.6, 0.3), smoothstep(0.0, 1.0, softMinValue(d, d2, 0.01)));
 
     vec3 color = vec3(0.0, 0.2, 0.3);
-    // color = mix(vec3(0.6, 0.12, 0.3), color, step(0.0, d));
+    // color = mix(vec3(0.6, 0.12, 0.3), color, step(0.5, shadow));
     // color = mix(vec3(0.12, 0.6, 0.3), color, step(0.0, d2));
     color = mix(sdfColor, color, step(0.0, dU));
 
