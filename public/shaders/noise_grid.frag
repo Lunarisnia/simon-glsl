@@ -1,7 +1,7 @@
 varying vec2 vUv;
 
-uniform float u_time;
 uniform vec2 u_resolution;
+uniform float u_time;
 
 // Source: https://www.shadertoy.com/view/4dffRH
 vec3 hash(vec3 p) // this hash is not production ready, please
@@ -72,73 +72,39 @@ float fbm(vec3 p, int octaves, float persistence, float lacunarity) {
     return total;
 }
 
-vec3 GenerateGridStars(vec2 pixelCoords, float cellWidth, float starRadius, float seed) {
-    vec2 cellCoords = (fract(pixelCoords / cellWidth) - 0.5) * cellWidth;
-    vec2 cellID = floor(pixelCoords / cellWidth) + (seed / 100.0);
-    vec3 cellHashValue = hash(vec3(cellID, 0.0));
-
-    float starBrightness = clamp(cellHashValue.z, 0.0, 1.0);
-    vec2 starPosition = vec2(0.0) + cellHashValue.xy * (cellWidth * 0.5 - starRadius * 4.0);
-    float distToCell = length(cellCoords - starPosition);
-    float glow = exp(-2.0 * distToCell / starRadius);
-
-    return vec3(glow * starBrightness);
-}
-
-vec3 GenerateStars(vec2 pixelCoords) {
-    vec3 stars = vec3(0.0);
-    float cellWidth = 700.0;
-    float starRadius = 10.0;
-
-    for (float i = 0.0; i < 5.0; i += 1.0) {
-        stars += GenerateGridStars(pixelCoords, cellWidth, starRadius, i);
-
-        cellWidth *= 0.5;
-        starRadius *= 0.75;
-    }
-
-    return stars;
-}
-
 float sdCircle(vec2 p, float radius) {
     return length(p) - radius;
-}
-
-vec3 DrawPlanet(vec2 pixelCoords, vec3 color) {
-    float planetRadius = 400.0;
-
-    float d = sdCircle(pixelCoords, planetRadius);
-
-    vec3 planetColor = vec3(1.0);
-    if (d <= 0.0) {
-        vec2 pc = pixelCoords / 10.0;
-        float x = pc.x / planetRadius;
-        float y = pc.y / planetRadius;
-        float z = sqrt(1.0 - x * x - y * y);
-        vec3 viewNormal = vec3(x, y, z + (u_time * 0.05));
-        vec3 wsPosition = viewNormal;
-
-        vec3 noiseCoord = wsPosition * 2.0;
-        float noiseSample = fbm(noiseCoord, 6, 0.5, 2.0);
-
-        vec3 seaColor = vec3(0.0, 0.0, 1.0);
-        vec3 landColor = vec3(0.5, 0.3, 0.3);
-
-        planetColor = mix(seaColor, landColor, smoothstep(0.05, 0.06, noiseSample));
-    }
-
-    color = mix(color, planetColor, smoothstep(0.0, -1.0, d));
-
-    return color;
 }
 
 void main() {
     vec2 uv = vUv;
     vec2 pixelCoords = (uv - 0.5) * u_resolution;
+    vec2 cell = (fract(pixelCoords / 400.0) - 0.5) * 400.0;
+    vec2 cellID = floor(pixelCoords / 400.0);
+    vec3 cellHash = hash(vec3(cellID, 0.0));
+
+    float d = sdCircle(cell + cellHash.xy * (400.0 * 0.2), 100.0);
+    vec3 planetColor = vec3(0.0);
+    if (d <= 0.4) {
+        float x = pixelCoords.x / 100.0;
+        float y = pixelCoords.y / 100.0;
+        float z = exp(1.0 - x * x - y * y);
+        vec3 viewNormal = vec3(x, y, z);
+        vec3 wsPosition = viewNormal;
+
+        vec3 noiseCoords = wsPosition * 2.0;
+        float noiseSample = fbm(noiseCoords, 8, 0.5, 2.0);
+
+        planetColor = mix(vec3(1.0), vec3(0.0), smoothstep(0.05, 0.06, noiseSample));
+    }
 
     vec3 color = vec3(0.0);
-    color = GenerateStars(pixelCoords);
-    color = DrawPlanet(pixelCoords, color);
+    color = vec3(cell, 0.0);
+    color = mix(planetColor, color, step(0.0, d));
+
+    float noiseSample = fbm(vec3(pixelCoords, u_time * 0.5), 8, 0.5, 2.0);
+    float d1 = sdCircle(pixelCoords - (noiseSample * 20.0), 200.0);
+    color = mix(vec3(1.0), vec3(0.0), step(0.0, d1));
 
     gl_FragColor = vec4(color, 1.0);
 }
