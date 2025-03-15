@@ -102,8 +102,9 @@ void main() {
     color = vec3(cell, 0.0);
     color = mix(planetColor, color, step(0.0, d));
 
-    float noiseSample = fbm(vec3(pixelCoords, u_time * 0.5), 8, 0.5, 2.0);
-    float d1 = sdCircle(pixelCoords - (noiseSample * 20.0), 200.0);
+    vec3 noisePos = hash(vec3(pixelCoords, u_time));
+    float noiseSample = fbm(vec3(pixelCoords, 0.0), 8, 0.5, 2.0);
+    float d1 = sdCircle(pixelCoords - sin(noisePos.xy) * 180.0, 200.0);
     color = mix(vec3(1.0), vec3(0.0), step(0.0, d1));
 
     gl_FragColor = vec4(color, 1.0);

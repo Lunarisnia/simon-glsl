@@ -105,26 +105,31 @@ float sdCircle(vec2 p, float radius) {
 }
 
 vec3 DrawPlanet(vec2 pixelCoords, vec3 color) {
-    float planetRadius = 400.0;
+    float planetRadius = 600.0;
 
     float d = sdCircle(pixelCoords, planetRadius);
 
     vec3 planetColor = vec3(1.0);
     if (d <= 0.0) {
-        vec2 pc = pixelCoords / 10.0;
+        vec2 pc = pixelCoords;
         float x = pc.x / planetRadius;
         float y = pc.y / planetRadius;
         float z = sqrt(1.0 - x * x - y * y);
-        vec3 viewNormal = vec3(x, y, z + (u_time * 0.05));
+        vec3 viewNormal = vec3(x, y, z);
         vec3 wsPosition = viewNormal;
 
         vec3 noiseCoord = wsPosition * 2.0;
-        float noiseSample = fbm(noiseCoord, 6, 0.5, 2.0);
+        float noiseSample = fbm(noiseCoord + vec3(120.0), 10, 0.59, 2.0);
+        float desertSample = fbm(noiseCoord * 0.5 + vec3(20.0), 8, 0.5, 2.0);
+        float noiseSample2 = fbm(noiseCoord * 2.0 + vec3(84.0), 6, 0.5, 2.0);
 
-        vec3 seaColor = vec3(0.0, 0.0, 1.0);
-        vec3 landColor = vec3(0.5, 0.3, 0.3);
+        vec3 seaColor = mix(vec3(0.0, 0.0, 1.0), vec3(0.8479, 0.8984, 0.99823), smoothstep(0.002, 0.06, noiseSample));
+        vec3 landColor = mix(vec3(0.3, 0.8443, 0.44), vec3(0.884, 0.994, 0.8290), smoothstep(0.05, 1.0, noiseSample));
+        landColor = mix(vec3(0.8, 0.8, 0.6), landColor, smoothstep(0.03, 0.06, desertSample));
+        landColor = mix(vec3(0.4), landColor, smoothstep(0.2, 0.1, noiseSample2));
+        landColor = mix(landColor, vec3(0.9), abs(viewNormal.y));
 
-        planetColor = mix(seaColor, landColor, smoothstep(0.05, 0.06, noiseSample));
+        planetColor = mix(seaColor, landColor, smoothstep(0.03, 0.06, noiseSample));
     }
 
     color = mix(color, planetColor, smoothstep(0.0, -1.0, d));
