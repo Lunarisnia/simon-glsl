@@ -117,6 +117,8 @@ vec3 DrawPlanet(vec2 pixelCoords, vec3 color) {
         float z = sqrt(1.0 - x * x - y * y);
         vec3 viewNormal = vec3(x, y, z);
         vec3 wsPosition = viewNormal;
+        vec3 wsNormal = normalize(wsPosition);
+        vec3 wsViewDir = normalize(vec3(0.0, 0.0, 1.0));
 
         vec3 noiseCoord = wsPosition * 2.0;
         float noiseSample = fbm(noiseCoord + vec3(120.0), 10, 0.59, 2.0);
@@ -124,13 +126,31 @@ vec3 DrawPlanet(vec2 pixelCoords, vec3 color) {
 
         vec3 landColor = mix(vec3(0.3, 0.8443, 0.44), vec3(0.884, 0.994, 0.8290), smoothstep(0.05, 1.0, noiseSample));
         landColor = mix(vec3(0.8, 0.8, 0.6), landColor, smoothstep(0.03, 0.06, desertSample));
-        landColor = mix(landColor, vec3(0.4), smoothstep(0.1, 0.2, noiseSample));
-        landColor = mix(landColor, vec3(1.0), smoothstep(0.2, 0.3, noiseSample));
+        landColor = mix(landColor, vec3(0.4), smoothstep(0.01, 0.2, noiseSample));
+        landColor = mix(landColor, vec3(1.0), smoothstep(0.1, 0.2, noiseSample));
         landColor = mix(landColor, vec3(0.9), smoothstep(0.4, 0.9, abs(viewNormal.y)));
 
         vec3 seaColor = mix(vec3(0.0, 0.0, 1.0), vec3(0.8479, 0.8984, 0.99823), smoothstep(0.002, 0.06, noiseSample));
 
         planetColor = mix(seaColor, landColor, smoothstep(0.03, 0.06, noiseSample));
+
+        // Lighting
+        vec3 lightColor = vec3(1.0);
+        vec3 lightDirection = normalize(vec3(1.0, 1.0, 1.0));
+        float dp = max(0.0, dot(lightDirection, wsNormal));
+
+        vec3 diffuse = dp * lightColor;
+
+        vec3 r = normalize(reflect(-lightDirection, wsNormal));
+        float phongValue = max(0.0, dot(wsViewDir, r));
+        phongValue = pow(phongValue, 4.0);
+
+        vec3 specular = vec3(phongValue) * 0.5 * diffuse;
+
+        vec3 lighting = diffuse;
+
+        vec3 planetShading = planetColor * lighting + specular;
+        planetColor = planetShading;
     }
 
     color = mix(color, planetColor, smoothstep(0.0, -1.0, d));
