@@ -121,13 +121,14 @@ vec3 DrawPlanet(vec2 pixelCoords, vec3 color) {
         vec3 noiseCoord = wsPosition * 2.0;
         float noiseSample = fbm(noiseCoord + vec3(120.0), 10, 0.59, 2.0);
         float desertSample = fbm(noiseCoord * 0.5 + vec3(20.0), 8, 0.5, 2.0);
-        float noiseSample2 = fbm(noiseCoord * 2.0 + vec3(84.0), 6, 0.5, 2.0);
 
-        vec3 seaColor = mix(vec3(0.0, 0.0, 1.0), vec3(0.8479, 0.8984, 0.99823), smoothstep(0.002, 0.06, noiseSample));
         vec3 landColor = mix(vec3(0.3, 0.8443, 0.44), vec3(0.884, 0.994, 0.8290), smoothstep(0.05, 1.0, noiseSample));
         landColor = mix(vec3(0.8, 0.8, 0.6), landColor, smoothstep(0.03, 0.06, desertSample));
-        landColor = mix(vec3(0.4), landColor, smoothstep(0.2, 0.1, noiseSample2));
-        landColor = mix(landColor, vec3(0.9), abs(viewNormal.y));
+        landColor = mix(landColor, vec3(0.4), smoothstep(0.1, 0.2, noiseSample));
+        landColor = mix(landColor, vec3(1.0), smoothstep(0.2, 0.3, noiseSample));
+        landColor = mix(landColor, vec3(0.9), smoothstep(0.4, 0.9, abs(viewNormal.y)));
+
+        vec3 seaColor = mix(vec3(0.0, 0.0, 1.0), vec3(0.8479, 0.8984, 0.99823), smoothstep(0.002, 0.06, noiseSample));
 
         planetColor = mix(seaColor, landColor, smoothstep(0.03, 0.06, noiseSample));
     }
