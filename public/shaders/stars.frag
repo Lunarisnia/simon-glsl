@@ -104,6 +104,21 @@ float sdCircle(vec2 p, float radius) {
     return length(p) - radius;
 }
 
+float map(vec3 pos) {
+    return fbm(pos, 10, 0.5, 2.0);
+}
+
+vec3 calcSDFNormal(vec3 pos, vec3 n) {
+    vec2 e = vec2(0.0001, 0.0);
+    return normalize(
+        n + -500.0 * vec3(
+                    map(pos + e.xyy) - map(pos - e.xyy),
+                    map(pos + e.yxy) - map(pos - e.yxy),
+                    map(pos + e.yyx) - map(pos - e.yyx)
+                )
+    );
+}
+
 vec3 DrawPlanet(vec2 pixelCoords, vec3 color) {
     float planetRadius = 600.0;
 
@@ -130,14 +145,15 @@ vec3 DrawPlanet(vec2 pixelCoords, vec3 color) {
         landColor = mix(landColor, vec3(1.0), smoothstep(0.1, 0.2, noiseSample));
         landColor = mix(landColor, vec3(0.9), smoothstep(0.4, 0.9, abs(viewNormal.y)));
 
-        vec3 seaColor = mix(vec3(0.0, 0.0, 1.0), vec3(0.8479, 0.8984, 0.99823), smoothstep(0.002, 0.06, noiseSample));
+        vec3 seaColor = mix(vec3(0.2, 0.3, 0.7), vec3(0.8479, 0.8984, 0.99823), smoothstep(0.02, 0.06, noiseSample));
 
-        planetColor = mix(seaColor, landColor, smoothstep(0.03, 0.06, noiseSample));
+        planetColor = mix(seaColor, landColor, smoothstep(0.05, 0.06, noiseSample));
 
         // Lighting
         vec3 lightColor = vec3(1.0);
         vec3 lightDirection = normalize(vec3(1.0, 1.0, 1.0));
-        float dp = max(0.0, dot(lightDirection, wsNormal));
+        vec3 wsSurfaceNormal = calcSDFNormal(noiseCoord, wsNormal);
+        float dp = max(0.0, dot(lightDirection, wsSurfaceNormal));
 
         vec3 diffuse = dp * lightColor;
 
@@ -151,6 +167,11 @@ vec3 DrawPlanet(vec2 pixelCoords, vec3 color) {
 
         vec3 planetShading = planetColor * lighting + specular;
         planetColor = planetShading;
+
+        // Fresnel
+        float fresnel = smoothstep(1.0, 0.1, viewNormal.z);
+        fresnel = pow(fresnel, 2.0) * dp;
+        planetColor = mix(planetColor, vec3(0.0, 0.5, 1.0), fresnel);
     }
 
     color = mix(color, planetColor, smoothstep(0.0, -1.0, d));
