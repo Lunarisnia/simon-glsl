@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import fragmentShader from "./public/shaders/stars.frag?raw"
+import fragmentShader from "./public/shaders/planet_crashing.frag?raw"
 import vertexShader from "./public/shaders/vertex-shaders.vert?raw"
 
 var container;

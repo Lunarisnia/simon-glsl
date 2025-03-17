@@ -135,7 +135,7 @@ vec3 DrawPlanet(vec2 pixelCoords, vec3 color) {
         vec3 wsNormal = normalize(wsPosition);
         vec3 wsViewDir = normalize(vec3(0.0, 0.0, 1.0));
 
-        vec3 noiseCoord = wsPosition * 2.0;
+        vec3 noiseCoord = wsPosition * 2.0 - vec3(200.0, 0.0, 0.0);
         float noiseSample = fbm(noiseCoord + vec3(120.0), 10, 0.59, 2.0);
         float desertSample = fbm(noiseCoord * 0.5 + vec3(20.0), 8, 0.5, 2.0);
 
