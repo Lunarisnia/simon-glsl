@@ -17,7 +17,7 @@ float sdCloud(vec2 pc) {
 float repeated(vec2 p, float s, float sY) {
     p.x = p.x - s * round(p.x / s);
     p.y = p.y - sY * round(p.y / sY);
-    return sdCloud(p);
+    return sdCircle(p, 100.0);
 }
 
 void main() {
@@ -26,8 +26,13 @@ void main() {
 
     vec3 color = vec3(uv, 0.0);
 
-    float d = repeated(pixelCoords - vec2(u_time * 200.0, 0.0), 800.0, 400.0);
-    color = mix(vec3(1.0), color, d);
+    float d = repeated(pixelCoords, 800.0, 400.0);
+
+    if (d >= 0.0) {
+        color = vec3(0.5);
+    }
+    color *= 0.8 + 0.2 * cos(0.5 * d);
+    color = mix(vec3(1.0), color, smoothstep(0.0, 1.0, abs(d)));
 
     gl_FragColor = vec4(color, 1.0);
 }
