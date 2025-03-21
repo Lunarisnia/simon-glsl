@@ -7,13 +7,7 @@ float sdCircle(vec2 pc, float radius) {
     return length(pc) - radius;
 }
 
-void main() {
-    vec2 uv = vUv;
-    vec2 pc = (uv - 0.5) * u_resolution;
-
-    float st = uv.y;
-    vec3 color = mix(vec3(0.0), vec3(0.0, 0.0, 255.0), smoothstep(0.0, 20.0, st));
-
+vec3 DrawSphere(vec2 pc, vec3 color) {
     float sphereRadius = 400.0;
     float d = sdCircle(pc, sphereRadius);
     vec3 sphereColor = vec3(0.0);
@@ -47,6 +41,24 @@ void main() {
     }
 
     color = mix(sphereColor, color, smoothstep(0.0, 1.0, d));
+
+    return color;
+}
+
+vec3 repeatedSphere(vec2 pc, vec3 color, float s) {
+    float id = round(pc.x / s);
+    pc.x = pc.x - s * id;
+    return DrawSphere(pc, color);
+}
+
+void main() {
+    vec2 uv = vUv;
+    vec2 pc = (uv - 0.5) * u_resolution;
+
+    float st = uv.y;
+    vec3 color = mix(vec3(0.0), vec3(0.0, 0.0, 255.0), smoothstep(0.0, 20.0, st));
+
+    color = repeatedSphere(pc, color, 850.0);
 
     gl_FragColor = vec4(color, 1.0);
 }
