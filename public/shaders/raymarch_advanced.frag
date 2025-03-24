@@ -115,6 +115,7 @@ vec3 CalculateSpecular(vec3 viewDir, vec3 normal, vec3 lightDir) {
 }
 
 float CalculateShadow(vec3 pos, vec3 lightDir) {
+    float res = 1.0;
     float d = 0.01;
     for (int i = 0; i < 64; i++) {
         float distToScene = map(pos + lightDir * d).dist;
@@ -123,10 +124,11 @@ float CalculateShadow(vec3 pos, vec3 lightDir) {
             return 0.0;
         }
 
+        res = min(res, 2.0 * distToScene / d);
         d += distToScene;
     }
 
-    return 1.0;
+    return res;
 }
 
 vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
