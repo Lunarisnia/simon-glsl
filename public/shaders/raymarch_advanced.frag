@@ -94,8 +94,24 @@ vec3 CalculateNormal(vec3 pos) {
 
 vec3 CalculateLighting(vec3 pos, vec3 normal, vec3 lightDir, vec3 lightColor) {
     float dp = saturate(dot(normal, lightDir));
+    // dp *= smoothstep(0.5, 0.55, dp);
+    vec3 diffuse = lightColor * dp;
 
-    return lightColor * dp;
+    vec3 lighting = diffuse;
+
+    return lighting;
+}
+
+vec3 CalculateSpecular(vec3 viewDir, vec3 normal, vec3 lightDir) {
+    vec3 specular = vec3(0.0);
+    // Phong
+    vec3 r = normalize(reflect(-lightDir, normal));
+    float phong = max(0.0, dot(viewDir, r));
+    phong = pow(phong, 2.0);
+
+    specular = vec3(phong);
+
+    return specular;
 }
 
 vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
@@ -127,9 +143,10 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
     vec3 normal = CalculateNormal(position);
     vec3 lightDir = vec3(1.0, 2.0, -1.0);
     vec3 lighting = CalculateLighting(position, normal, lightDir, vec3(1.0));
+    vec3 specular = CalculateSpecular(-cameraDir, normal, lightDir);
 
     // guaranteed to have hit something
-    return materialInfo.color * lighting;
+    return materialInfo.color * lighting + specular;
 }
 
 void main() {
