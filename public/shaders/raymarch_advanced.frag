@@ -114,6 +114,21 @@ vec3 CalculateSpecular(vec3 viewDir, vec3 normal, vec3 lightDir) {
     return specular;
 }
 
+float CalculateShadow(vec3 pos, vec3 lightDir) {
+    float d = 0.01;
+    for (int i = 0; i < 64; i++) {
+        float distToScene = map(pos + lightDir * d).dist;
+
+        if (distToScene < 0.001) {
+            return 0.0;
+        }
+
+        d += distToScene;
+    }
+
+    return 1.0;
+}
+
 vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
     int numSteps = 256;
     float maxDist = 1000.0;
@@ -144,9 +159,10 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
     vec3 lightDir = vec3(1.0, 2.0, -1.0);
     vec3 lighting = CalculateLighting(position, normal, lightDir, vec3(1.0));
     vec3 specular = CalculateSpecular(-cameraDir, normal, lightDir);
+    float shadow = CalculateShadow(position, lightDir);
 
     // guaranteed to have hit something
-    return materialInfo.color * lighting + specular;
+    return (materialInfo.color * lighting + specular) * shadow;
 }
 
 void main() {
