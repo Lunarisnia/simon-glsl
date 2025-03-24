@@ -62,7 +62,7 @@ MaterialInfo map(vec3 pos) {
 
     MaterialInfo result = MaterialInfo(plane, RED);
 
-    float dist = sdfSphere(pos - vec3(-1.0, 0.0, 5.0), 1.0);
+    float dist = sdfSphere(pos - vec3(-2.0, -0.85, 5.0), 1.0);
     if (dist < result.dist) {
         result.color = BLUE;
     } else {
@@ -70,7 +70,7 @@ MaterialInfo map(vec3 pos) {
     }
     result.dist = min(result.dist, dist);
 
-    float box = sdBox(pos - vec3(1.0, 0.0, 5.0), vec3(1.0));
+    float box = sdBox(pos - vec3(2.0, -0.85, 5.0), vec3(1.0));
     dist = min(dist, box);
     if (dist < result.dist) {
         result.color = GREEN;
@@ -80,6 +80,22 @@ MaterialInfo map(vec3 pos) {
     result.dist = min(dist, result.dist);
 
     return result;
+}
+
+vec3 CalculateNormal(vec3 pos) {
+    const float EPS = 0.0001;
+    vec3 n = vec3(
+            map(pos + vec3(EPS, 0.0, 0.0)).dist - map(pos - vec3(EPS, 0.0, 0.0)).dist,
+            map(pos + vec3(0.0, EPS, 0.0)).dist - map(pos - vec3(0.0, EPS, 0.0)).dist,
+            map(pos + vec3(0.0, 0.0, EPS)).dist - map(pos - vec3(0.0, 0.0, EPS)).dist
+        );
+    return normalize(n);
+}
+
+vec3 CalculateLighting(vec3 pos, vec3 normal, vec3 lightDir, vec3 lightColor) {
+    float dp = saturate(dot(normal, lightDir));
+
+    return lightColor * dp;
 }
 
 vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
@@ -108,8 +124,12 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
         // case 3: haven't hit anything, loop around
     }
 
+    vec3 normal = CalculateNormal(position);
+    vec3 lightDir = vec3(1.0, 2.0, -1.0);
+    vec3 lighting = CalculateLighting(position, normal, lightDir, vec3(1.0));
+
     // guaranteed to have hit something
-    return materialInfo.color;
+    return materialInfo.color * lighting;
 }
 
 void main() {
