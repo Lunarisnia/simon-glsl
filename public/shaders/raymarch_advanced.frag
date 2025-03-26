@@ -52,8 +52,8 @@ struct MaterialInfo {
 };
 
 vec3 RED = vec3(1.0, 0.0, 0.0);
-vec3 BLUE = vec3(0.0, 1.0, 0.0);
-vec3 GREEN = vec3(0.0, 0.0, 1.0);
+vec3 GREEN = vec3(0.0, 1.0, 0.0);
+vec3 BLUE = vec3(0.0, 0.0, 1.0);
 vec3 GRAY = vec3(0.5);
 vec3 WHITE = vec3(1.0);
 
@@ -66,6 +66,17 @@ MaterialInfo map(vec3 pos) {
     float dist = sdfSphere(pos - vec3(-2.0, -0.85, 5.0), 1.0);
     if (dist < result.dist) {
         result.color = BLUE;
+        result.specular = 1.0;
+    } else {
+        result.color = result.color;
+        result.specular = 1.0;
+    }
+    result.dist = min(result.dist, dist);
+
+    float sphere = sdfSphere(pos - vec3(0.0, -0.85, 48.0 + sin(u_time) * 25.0), 1.0);
+    dist = min(dist, sphere);
+    if (dist < result.dist) {
+        result.color = vec3(0.0);
         result.specular = 1.0;
     } else {
         result.color = result.color;
@@ -142,6 +153,7 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
 
     vec3 position = vec3(0.0);
     MaterialInfo materialInfo;
+    vec3 skyColor = vec3(0.7, 0.8, 0.8);
 
     for (int i = 0; i < numSteps; i++) {
         position = cameraOrigin + materialInfo.dist * cameraDir;
@@ -157,7 +169,7 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
 
         // case 2: dist > maxDist, overshoot and went out of the world
         if (materialInfo.dist > maxDist) {
-            return vec3(0.0);
+            return skyColor;
         }
 
         // case 3: haven't hit anything, loop around
@@ -168,9 +180,16 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
     vec3 lighting = CalculateLighting(position, normal, lightDir, vec3(1.0));
     vec3 specular = CalculateSpecular(-cameraDir, normal, lightDir, materialInfo.specular);
     float shadow = CalculateShadow(position, lightDir);
+    lighting = materialInfo.color * lighting + specular;
+    lighting *= shadow;
+
+    vec3 color = lighting;
+
+    float fogFactor = 1.0 - exp(-position.z * 0.01);
+    color = mix(color, skyColor, fogFactor);
 
     // guaranteed to have hit something
-    return (materialInfo.color * lighting + specular) * shadow;
+    return color;
 }
 
 void main() {
