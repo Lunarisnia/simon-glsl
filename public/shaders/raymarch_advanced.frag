@@ -48,6 +48,7 @@ mat3 rotateX(float angle) {
 struct MaterialInfo {
     float dist;
     vec3 color;
+    float specular;
 };
 
 vec3 RED = vec3(1.0, 0.0, 0.0);
@@ -60,13 +61,15 @@ vec3 WHITE = vec3(1.0);
 MaterialInfo map(vec3 pos) {
     float plane = sdPlane(pos - vec3(0.0, -2.0, 0.0));
 
-    MaterialInfo result = MaterialInfo(plane, RED);
+    MaterialInfo result = MaterialInfo(plane, RED, 1.0);
 
     float dist = sdfSphere(pos - vec3(-2.0, -0.85, 5.0), 1.0);
     if (dist < result.dist) {
         result.color = BLUE;
+        result.specular = 1.0;
     } else {
         result.color = result.color;
+        result.specular = 1.0;
     }
     result.dist = min(result.dist, dist);
 
@@ -74,8 +77,10 @@ MaterialInfo map(vec3 pos) {
     dist = min(dist, box);
     if (dist < result.dist) {
         result.color = GREEN;
+        result.specular = 8.0;
     } else {
         result.color = result.color;
+        result.specular = 1.0;
     }
     result.dist = min(dist, result.dist);
 
@@ -102,12 +107,12 @@ vec3 CalculateLighting(vec3 pos, vec3 normal, vec3 lightDir, vec3 lightColor) {
     return lighting;
 }
 
-vec3 CalculateSpecular(vec3 viewDir, vec3 normal, vec3 lightDir) {
+vec3 CalculateSpecular(vec3 viewDir, vec3 normal, vec3 lightDir, float k) {
     vec3 specular = vec3(0.0);
     // Phong
     vec3 r = normalize(reflect(-lightDir, normal));
     float phong = max(0.0, dot(viewDir, r));
-    phong = pow(phong, 2.0);
+    phong = pow(phong, 2.0 * k);
 
     specular = vec3(phong);
 
@@ -148,6 +153,7 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
         }
         materialInfo.dist += currentMaterialInfo.dist;
         materialInfo.color = currentMaterialInfo.color;
+        materialInfo.specular = currentMaterialInfo.specular;
 
         // case 2: dist > maxDist, overshoot and went out of the world
         if (materialInfo.dist > maxDist) {
@@ -160,7 +166,7 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
     vec3 normal = CalculateNormal(position);
     vec3 lightDir = vec3(1.0, 2.0, -1.0);
     vec3 lighting = CalculateLighting(position, normal, lightDir, vec3(1.0));
-    vec3 specular = CalculateSpecular(-cameraDir, normal, lightDir);
+    vec3 specular = CalculateSpecular(-cameraDir, normal, lightDir, materialInfo.specular);
     float shadow = CalculateShadow(position, lightDir);
 
     // guaranteed to have hit something
