@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import fragmentShader from "./public/shaders/raymarch_advanced.frag?raw"
+import fragmentShader from "./public/shaders/raymarch_terrain.frag?raw"
 import vertexShader from "./public/shaders/vertex-shaders.vert?raw"
 
 var container;
