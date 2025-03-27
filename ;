@@ -1,0 +1,74 @@
+varying vec2 vUv;
+
+uniform float u_time;
+uniform vec2 u_resolution;
+
+float sdSphere(vec3 p, float r) {
+    return length(p) - r;
+}
+
+struct MaterialInfo {
+    float dist;
+    vec3 color;
+};
+
+MaterialInfo map(vec3 pos) {
+    MaterialInfo result;
+
+    result.dist = sdSphere(pos - vec3(0.0, 0.0, 5.0), 1.0);
+
+    return dist;
+}
+
+vec3 CalculateNormal(vec3 pos) {
+    const float EPS = 0.0001;
+    vec3 n = vec3(
+            map(pos + vec3(EPS, 0.0, 0.0)).dist - map(pos - vec3(EPS, 0.0, 0.0)).dist,
+            map(pos + vec3(0.0, EPS, 0.0)).dist - map(pos - vec3(0.0, EPS, 0.0)).dist,
+            map(pos + vec3(0.0, 0.0, EPS)).dist - map(pos - vec3(0.0, 0.0, EPS)).dist
+        );
+    return normalize(n);
+}
+
+vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
+    int numSteps = 256;
+    float maxDist = 1000.0;
+
+    vec3 position = vec3(0.0);
+    MaterialInfo result;
+
+    for (int i = 0; i < numSteps; i++) {
+        position = cameraOrigin + dist * cameraDir;
+
+        MaterialInfo dist = map(position);
+        // case 1: distToScene < 0, intersected something
+        if (currentDist < 0.001) {
+            break;
+        }
+        dist += currentDist;
+
+        // case 2: dist > maxDist, overshoot and went out of the world
+        if (dist > maxDist) {
+            return vec3(0.0);
+        }
+
+        // case 3: haven't hit anything, loop around
+    }
+
+    // vec3 normal = CalculateNormal(position);
+
+    // guaranteed to have hit something
+    return vec3(1.0);
+}
+
+void main() {
+    vec2 uv = vUv;
+    vec2 pc = (uv - 0.5) * u_resolution;
+
+    vec3 rayDir = normalize(vec3(pc * 2.0 / u_resolution.y, 1.0));
+    vec3 rayOrigin = vec3(0.0);
+
+    vec3 color = RayMarch(rayOrigin, rayDir);
+
+    gl_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
+}
