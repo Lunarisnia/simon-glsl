@@ -105,11 +105,12 @@ vec3 WHITE = vec3(1.0);
 
 // Draws the entire scene
 MaterialInfo map(vec3 pos) {
-    float plane = sdPlane(pos - vec3(0.0, -2.0, 0.0));
-    float noiseSample = noiseFBM(pos.xz, 1, 0.5, 2.0);
+    float noiseSample = noiseFBM(pos.xz / 2.0, 1, 0.5, 2.0);
     noiseSample = abs(noiseSample);
+    noiseSample *= 1.5;
+    noiseSample += 0.1 * noiseFBM(pos.xz * 4.0, 6, 0.5, 2.0);
 
-    MaterialInfo result = MaterialInfo((pos.y - -2.0) + noiseSample, RED, 1.0);
+    MaterialInfo result = MaterialInfo(pos.y + noiseSample, GRAY, 1.0);
 
     // float dist = sdfSphere(pos - vec3(-2.0, -0.85, 5.0), 1.0);
     // if (dist < result.dist) {
@@ -224,12 +225,12 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
     }
 
     vec3 normal = CalculateNormal(position);
-    vec3 lightDir = vec3(1.0, 2.0, -1.0);
+    vec3 lightDir = normalize(vec3(1.0, 2.0, -1.0));
     vec3 lighting = CalculateLighting(position, normal, lightDir, vec3(1.0));
     vec3 specular = CalculateSpecular(-cameraDir, normal, lightDir, materialInfo.specular);
     float shadow = CalculateShadow(position, lightDir);
-    lighting = materialInfo.color * lighting + specular;
-    // lighting *= shadow;
+    lighting = materialInfo.color * lighting;
+    lighting *= shadow;
 
     vec3 color = lighting;
 
