@@ -13,6 +13,15 @@ mat3 rotateY(float angle) {
     );
 }
 
+// Source: https://www.shadertoy.com/view/4dffRH
+vec3 hash(vec3 p) // this hash is not production ready, please
+{ // replace this by something better
+    p = vec3(dot(p, vec3(127.1, 311.7, 74.7)),
+            dot(p, vec3(269.5, 183.3, 246.1)),
+            dot(p, vec3(113.5, 271.9, 124.6)));
+
+    return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+}
 // The MIT License
 // Copyright © 2013 Inigo Quilez
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -179,7 +188,35 @@ vec3 CalculateColor(vec3 color, vec3 position, vec3 normal, int type) {
     return color;
 }
 
-vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
+vec3 GenerateGridStars(vec2 pixelCoords, float cellWidth, float starRadius, float seed) {
+    vec2 cellCoords = (fract(pixelCoords / cellWidth) - 0.5) * cellWidth;
+    vec2 cellID = floor(pixelCoords / cellWidth) + (seed / 100.0);
+    vec3 cellHashValue = hash(vec3(cellID, 0.0));
+
+    float starBrightness = clamp(cellHashValue.z, 0.0, 1.0);
+    vec2 starPosition = vec2(0.0) + cellHashValue.xy * (cellWidth * 0.5 - starRadius * 4.0);
+    float distToCell = length(cellCoords - starPosition);
+    float glow = exp(-2.0 * distToCell / starRadius);
+
+    return vec3(glow * starBrightness);
+}
+
+vec3 GenerateStars(vec2 pixelCoords) {
+    vec3 stars = vec3(0.0);
+    float cellWidth = 700.0;
+    float starRadius = 10.0;
+
+    for (float i = 0.0; i < 2.0; i += 1.0) {
+        stars += GenerateGridStars(pixelCoords, cellWidth, starRadius, i);
+
+        cellWidth *= 0.2;
+        starRadius *= 0.15;
+    }
+
+    return stars;
+}
+
+vec3 RayMarch(vec2 pc, vec3 cameraOrigin, vec3 cameraDir) {
     int numSteps = 256;
     float maxDist = 1000.0;
 
@@ -201,7 +238,7 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
 
         // case 2: dist > maxDist, overshoot and went out of the world
         if (result.dist > maxDist) {
-            return vec3(0.0);
+            return GenerateStars(pc);
         }
 
         // case 3: haven't hit anything, loop around
@@ -240,7 +277,7 @@ void main() {
     vec3 cameraUp = vec3(0.0, 1.0, 0.0);
     mat3 camera = CreateCameraMatrix(rayOrigin, rayLookAt, cameraUp);
 
-    vec3 color = RayMarch(rayOrigin, rayDir * camera);
+    vec3 color = RayMarch(pc, rayOrigin, rayDir * camera);
 
     gl_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }
