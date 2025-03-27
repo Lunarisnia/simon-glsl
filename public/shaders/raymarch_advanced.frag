@@ -176,7 +176,7 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
     }
 
     vec3 normal = CalculateNormal(position);
-    vec3 lightDir = vec3(1.0, 2.0, -1.0);
+    vec3 lightDir = normalize(vec3(1.0, 2.0, -1.0));
     vec3 lighting = CalculateLighting(position, normal, lightDir, vec3(1.0));
     vec3 specular = CalculateSpecular(-cameraDir, normal, lightDir, materialInfo.specular);
     float shadow = CalculateShadow(position, lightDir);
