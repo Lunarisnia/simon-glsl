@@ -67,6 +67,12 @@ float sdPlane(vec3 p) {
     return p.y;
 }
 
+float sdPlane2(vec3 p, vec3 n, float h)
+{
+    // n must be normalized
+    return dot(p, n) + h;
+}
+
 vec3 GRAY = vec3(0.6);
 
 struct MaterialInfo {
@@ -76,9 +82,10 @@ struct MaterialInfo {
 };
 
 vec3 ShadePlanet(vec3 pos, vec3 normal) {
-    float noiseSample = noiseFBM((pos.xy / 10.0 + 893.0), 8, 0.5, 2.0);
-    float desertSample = noiseFBM((pos.xy / 10.0 + 362.0), 8, 0.5, 2.0);
-    float cloudSample = noiseFBM((pos.xy / 10.0 + 808.0), 4, 0.5, 2.0);
+    float modifier = 15.0;
+    float noiseSample = noiseFBM((pos.xy / modifier + 893.0), 8, 0.5, 2.0);
+    float desertSample = noiseFBM((pos.xy / modifier + 362.0), 8, 0.5, 2.0);
+    float cloudSample = noiseFBM((pos.xy / modifier + 808.0), 4, 0.5, 2.0);
 
     // rgb(34, 59, 7)
     vec3 earthGreen = vec3(34.0, 95.0, 30.0) / 255.0;
@@ -95,17 +102,23 @@ vec3 ShadePlanet(vec3 pos, vec3 normal) {
 
     // Fresnel
     float fresnel = smoothstep(1.0, 0.1, -normal.z);
-    fresnel = pow(fresnel, 0.8);
-    planetColor = mix(planetColor, vec3(0.4), fresnel);
+    fresnel = pow(fresnel, 0.3);
+    planetColor = mix(planetColor, vec3(0.4, 0.4, 0.8), fresnel);
 
-    return planetColor;
+    return planetColor * 4.0;
 }
 
 MaterialInfo map(vec3 pos) {
-    MaterialInfo result = MaterialInfo(sdPlane(pos - vec3(0.0, -2.0, 0.0)), GRAY, 0);
-    // MaterialInfo result;
+    float noiseSample = noiseFBM(pos.xz / 2.0, 1, 0.5, 2.0);
+    noiseSample = abs(noiseSample);
+    noiseSample *= 1.5;
+    noiseSample += 0.1 * noiseFBM(pos.xz * 2.0, 6, 0.5, 2.0);
 
-    vec3 spherePos = pos - vec3(0.0, 1.0, 100.0);
+    vec3 planePos = pos - vec3(0.0, 0.0, 0.0);
+    float plane = sdPlane(planePos + noiseSample);
+    MaterialInfo result = MaterialInfo(plane, GRAY, 0);
+
+    vec3 spherePos = pos - vec3(0.0, 120.0, 200.0);
     float sphere = sdSphere(spherePos, 80.0);
     if (sphere <= result.dist) {
         result.color = vec3(1.0);
@@ -146,7 +159,7 @@ float CalculateShadow(vec3 pos, vec3 lightDir) {
             return 0.0;
         }
 
-        res = min(res, 2.0 * distToScene / d);
+        res = min(res, 8.0 * distToScene / d);
         d += distToScene;
     }
 
@@ -188,27 +201,32 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
 
         // case 2: dist > maxDist, overshoot and went out of the world
         if (result.dist > maxDist) {
-            return vec3(0.2);
+            return vec3(0.0);
         }
 
         // case 3: haven't hit anything, loop around
     }
 
     vec3 normal = CalculateNormal(position);
-    vec3 lightDir = normalize(vec3(1.0, 1.0, -1.0));
+    vec3 lightDir = normalize(vec3(-1.0, 1.0, -3.0));
     vec3 lighting = CalculateLighting(normal, lightDir, vec3(1.0));
     float shadow = CalculateShadow(position, lightDir);
     result.color = CalculateColor(result.color, position, normal, result.type);
 
+    vec3 color = result.color * lighting;
+
+    float fogDistance = distance(cameraOrigin, position);
+    float fogFactor = 1.0 - exp(-fogDistance * 0.01);
+    color = mix(color, vec3(0.0), fogFactor);
+
     // guaranteed to have hit something
-    return result.color * lighting * shadow;
+    return color;
 }
 
 mat3 CreateCameraMatrix(vec3 cameraOrigin, vec3 cameraLookAt, vec3 cameraUp) {
     vec3 z = normalize(cameraLookAt - cameraOrigin);
-    vec3 x = normalize(cross(cameraUp, z));
-    vec3 y = normalize(cross(z, x));
-
+    vec3 x = normalize(cross(z, cameraUp));
+    vec3 y = cross(x, z);
     return mat3(x, y, z);
 }
 
@@ -217,8 +235,8 @@ void main() {
     vec2 pc = (uv - 0.5) * u_resolution;
 
     vec3 rayDir = normalize(vec3(pc * 2.0 / u_resolution.y, 1.0));
-    vec3 rayOrigin = vec3(0.0, 1.0, -1.0);
-    vec3 rayLookAt = vec3(0.0, 1.0, 0.0);
+    vec3 rayOrigin = vec3(0.0, 1.0, -2.0);
+    vec3 rayLookAt = vec3(0.0, 0.5, 0.0);
     vec3 cameraUp = vec3(0.0, 1.0, 0.0);
     mat3 camera = CreateCameraMatrix(rayOrigin, rayLookAt, cameraUp);
 
