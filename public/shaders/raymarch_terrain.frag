@@ -241,6 +241,14 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
     return color;
 }
 
+mat3 makeCameraMatrix(vec3 cameraOrigin, vec3 cameraLookAt, vec3 cameraUp) {
+    vec3 z = normalize(cameraLookAt - cameraOrigin);
+    vec3 x = normalize(cross(z, cameraUp));
+    vec3 y = cross(z, x);
+
+    return mat3(x, y, z);
+}
+
 void main() {
     vec2 uv = vUv;
     vec2 pc = (uv - 0.5) * u_resolution;
