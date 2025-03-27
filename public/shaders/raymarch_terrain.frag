@@ -234,7 +234,8 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
 
     vec3 color = lighting;
 
-    float fogFactor = 1.0 - exp(-position.z * 0.01);
+    float fogDistance = distance(cameraOrigin, position);
+    float fogFactor = 1.0 - exp(-fogDistance * 0.01);
     color = mix(color, skyColor, fogFactor);
 
     // guaranteed to have hit something
@@ -244,8 +245,7 @@ vec3 RayMarch(vec3 cameraOrigin, vec3 cameraDir) {
 mat3 makeCameraMatrix(vec3 cameraOrigin, vec3 cameraLookAt, vec3 cameraUp) {
     vec3 z = normalize(cameraLookAt - cameraOrigin);
     vec3 x = normalize(cross(z, cameraUp));
-    vec3 y = cross(z, x);
-
+    vec3 y = cross(x, z);
     return mat3(x, y, z);
 }
 
@@ -254,9 +254,11 @@ void main() {
     vec2 pc = (uv - 0.5) * u_resolution;
 
     vec3 rayDir = normalize(vec3(pc * 2.0 / u_resolution.y, 1.0));
-    vec3 rayOrigin = vec3(0.0);
+    vec3 rayOrigin = vec3(0.0, abs(sin(u_time)), 1.0);
+    vec3 rayLookAt = vec3(0.0, 0.0, -1.0);
+    mat3 camera = makeCameraMatrix(rayOrigin, rayLookAt, vec3(0.0, 1.0, 0.0));
 
-    vec3 color = RayMarch(rayOrigin, rayDir);
+    vec3 color = RayMarch(rayOrigin, rayDir * camera);
 
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }
