@@ -3918,9 +3918,9 @@ struct MaterialInfo {
 
 vec3 ShadePlanet(vec3 pos, vec3 normal) {
     float modifier = 15.0;
-    float noiseSample = noiseFBM((pos.xy / modifier + 893.0), 8, 0.5, 2.0);
-    float desertSample = noiseFBM((pos.xy / modifier + 362.0), 8, 0.5, 2.0);
-    float cloudSample = noiseFBM((pos.xy / modifier + 808.0), 4, 0.5, 2.0);
+    float noiseSample = noiseFBM((pos.xy / modifier + 893.0) - vec2(u_time, -u_time) * 0.15, 8, 0.5, 2.0);
+    float desertSample = noiseFBM((pos.xy / modifier + 362.0) - vec2(u_time, -u_time) * 0.15, 8, 0.5, 2.0);
+    float cloudSample = noiseFBM((pos.xy / modifier + 808.0) - vec2(u_time, -u_time) * 0.20, 4, 0.5, 2.0);
 
     // rgb(34, 59, 7)
     vec3 earthGreen = vec3(34.0, 95.0, 30.0) / 255.0;
