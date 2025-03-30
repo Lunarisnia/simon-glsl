@@ -15,6 +15,16 @@ float map(vec3 rayPosition) {
     return result;
 }
 
+vec3 CalculateNormal(vec3 p)
+{
+    const float h = 0.0001; // replace by an appropriate value
+    const vec2 k = vec2(1, -1);
+    return normalize(k.xyy * map(p + k.xyy * h) +
+            k.yyx * map(p + k.yyx * h) +
+            k.yxy * map(p + k.yxy * h) +
+            k.xxx * map(p + k.xxx * h));
+}
+
 float RayCast(vec3 rayOrigin, vec3 rayDir, int numStep, float minDist, float maxDist) {
     vec3 rayPosition = vec3(0.0);
     float dist = 0.0;
@@ -33,7 +43,7 @@ float RayCast(vec3 rayOrigin, vec3 rayDir, int numStep, float minDist, float max
         }
     }
 
-    return 1.0;
+    return dist;
 }
 
 vec3 RayMarch(vec3 rayOrigin, vec3 rayDir) {
@@ -43,7 +53,10 @@ vec3 RayMarch(vec3 rayOrigin, vec3 rayDir) {
         return vec3(0.0);
     }
 
-    return vec3(1.0);
+    vec3 pos = rayOrigin + rayDir * result;
+    vec3 normal = CalculateNormal(pos);
+
+    return normal;
 }
 
 void main() {
