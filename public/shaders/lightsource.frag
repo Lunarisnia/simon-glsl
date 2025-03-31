@@ -3,6 +3,8 @@ varying vec2 vUv;
 uniform vec2 u_resolution;
 uniform float u_time;
 
+// ================== UTILITY FUNCTION =======
+
 float inverseLerp(float v, float minValue, float maxValue) {
     return (v - minValue) / (maxValue - minValue);
 }
@@ -15,6 +17,18 @@ float remap(float v, float inMin, float inMax, float outMin, float outMax) {
 float saturate(float x) {
     return clamp(x, 0.0, 1.0);
 }
+
+mat3 rotateY(float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return mat3(
+        c, 0.0, s,
+        0.0, 1.0, 0.0,
+        -s, 0.0, c
+    );
+}
+
+// ==========================================
 
 struct Material {
     float dist;
@@ -40,13 +54,20 @@ float sdBox(vec3 p, vec3 b)
 
 Material map(vec3 rayPosition) {
     Material result;
-    // result.dist = sdSphere(rayPosition - vec3(0.0, 0.0, 5.0), 1.0);
-    // result.color = vec3(0.0, 1.0, 0.0);
+    result.dist = sdSphere(rayPosition - vec3(-3.0, 0.0, 5.0), 1.0);
+    result.color = vec3(0.0, 1.0, 0.0);
 
-    Material block = Material(sdBox(rayPosition - vec3(0.0, 0.0, 5.0), vec3(1.0)), vec3(1.0));
-    // Material block = Material(sdSphere(rayPosition - vec3(3.0, 0.0, 5.0), 1.0), vec3(1.0));
-    // result = materialMin(result, block);
-    result = block;
+    vec3 blockPosition = rayPosition - vec3(3.0, 0.0, 5.0);
+    Material block = Material(sdBox(blockPosition, vec3(1.0, 2.0, 1.0)), vec3(1.0));
+    result = materialMin(result, block);
+
+    vec3 wallRightPosition = rayPosition - vec3(6.0, 0.0, 5.0);
+    Material blockWallRight = Material(sdBox(wallRightPosition, vec3(1.0, 5.0, 4.0)), vec3(1.0));
+    result = materialMin(result, blockWallRight);
+
+    vec3 wallLeftPosition = rayPosition - vec3(-6.0, 0.0, 5.0);
+    Material blockWallLeft = Material(sdBox(wallLeftPosition, vec3(1.0, 5.0, 4.0)), vec3(1.0));
+    result = materialMin(result, blockWallLeft);
 
     return result;
 }
@@ -113,6 +134,45 @@ float CalculateShadow(vec3 pos, vec3 lightDir) {
     return 1.0;
 }
 
+float softshadow(in vec3 ro, in vec3 rd, in float mint, in float maxt, in float k)
+{
+    float res = 1.0;
+    float t = mint;
+    for (int i = 0; i < 32; i++)
+    {
+        float h = map(ro + rd * t).color.x;
+        res = min(res, k * h / t);
+        t += clamp(h, 0.1, 1.0);
+        if (res < 0.001 || t > maxt) break;
+    }
+    return clamp(res, 0.0, 1.0);
+}
+
+vec3 CalculateOrbLighting(vec3 pos, vec3 normal, vec3 lightColour, vec3 lightDir) {
+    vec3 specular = vec3(0.0);
+    vec3 lightPosition = vec3(0.0, 0.0, 5.0);
+
+    vec3 light = lightPosition - pos;
+
+    float llig = dot(light, light);
+    float im = inversesqrt(llig);
+    light = light * im;
+
+    float diffuse = saturate(dot(normal, light));
+
+    // float at = 2.0 * exp2(-2.00 * llig);
+    // diffuse *= at;
+
+    float shadow = 0.0;
+    if (diffuse > 0.01) {
+        shadow = softshadow(pos, light, 0.3, sqrt(llig), 32.0);
+        diffuse *= shadow;
+    }
+
+    specular += lightColour * diffuse;
+    return specular;
+}
+
 vec3 RayMarch(vec3 rayOrigin, vec3 rayDir) {
     Material result = RayCast(rayOrigin, rayDir, 256, 0.001, 1000.0);
 
@@ -122,8 +182,11 @@ vec3 RayMarch(vec3 rayOrigin, vec3 rayDir) {
 
     vec3 pos = rayOrigin + rayDir * result.dist;
     vec3 normal = CalculateNormal(pos);
+    vec3 lighting = CalculateLighting(pos, normal, vec3(1.0), vec3(1.0, 2.0, -2.0));
+    vec3 orbLighting = CalculateOrbLighting(pos, normal, vec3(1.0), vec3(0.0)); // Should be specular
+    float shadow = CalculateShadow(pos, orbLighting);
 
-    return result.color;
+    return result.color * 0.0 * lighting + (vec3(1.0) * 0.1) + 2.0 * orbLighting;
 }
 
 void main() {
