@@ -152,7 +152,7 @@ vec3 CalculateNormal(vec3 pos) {
 }
 
 vec3 CalculateLighting(vec3 normal, vec3 lightDir, vec3 lightColor) {
-    float dp = max(0.0, dot(normal, lightDir));
+    float dp = clamp(dot(normal, lightDir), 0.0, 1.0);
     vec3 diffuse = lightColor * dp;
 
     return diffuse;

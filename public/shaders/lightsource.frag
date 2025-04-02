@@ -54,7 +54,7 @@ float sdBox(vec3 p, vec3 b)
 
 Material map(vec3 rayPosition) {
     Material result;
-    result.dist = sdSphere(rayPosition - vec3(-3.0, 0.0, 5.0), 1.0);
+    result.dist = sdSphere(rayPosition - vec3(0.0, -2.0, 5.0), 1.0);
     result.color = vec3(0.0, 1.0, 0.0);
 
     vec3 blockPosition = rayPosition - vec3(3.0, 0.0, 5.0);
@@ -68,6 +68,10 @@ Material map(vec3 rayPosition) {
     vec3 wallLeftPosition = rayPosition - vec3(-6.0, 0.0, 5.0);
     Material blockWallLeft = Material(sdBox(wallLeftPosition, vec3(1.0, 5.0, 4.0)), vec3(1.0));
     result = materialMin(result, blockWallLeft);
+
+    vec3 wallDownPosition = rayPosition - vec3(0.0, -4.0, 5.0);
+    Material blockWallDown = Material(sdBox(wallDownPosition, vec3(6.0, 1.0, 4.0)), vec3(1.0));
+    result = materialMin(result, blockWallDown);
 
     return result;
 }
@@ -101,20 +105,26 @@ vec3 CalculateLighting(vec3 pos, vec3 normal, vec3 lightColour, vec3 lightDir) {
     return lightColour * dp;
 }
 
-Material RayCast(vec3 rayOrigin, vec3 rayDir, int numStep, float minDist, float maxDist) {
+const float MIN_DIST = 0.00001;
+
+Material RayCast(vec3 rayOrigin, vec3 rayDir, int numStep, float starDist, float maxDist) {
     vec3 rayPosition = vec3(0.0);
-    Material result;
+    Material result = Material(starDist, vec3(1.0));
     Material defaultResult = Material(-1.0, vec3(0.0));
 
     for (int i = 0; i < numStep; i++) {
-        rayPosition = rayOrigin + rayDir * result.dist;
+        rayPosition = rayOrigin + result.dist * rayDir;
 
         Material currentResult = map(rayPosition);
-        result.dist += currentResult.dist;
-        result.color = currentResult.color;
-        if (currentResult.dist < minDist) {
+        // if (abs(result.dist) < MIN_DIST * currentResult.dist) {
+        //     break;
+        // }
+
+        if (currentResult.dist < MIN_DIST) {
             break;
         }
+        result.dist += currentResult.dist;
+        result.color = currentResult.color;
 
         if (result.dist > maxDist) {
             return defaultResult;
@@ -125,13 +135,20 @@ Material RayCast(vec3 rayOrigin, vec3 rayDir, int numStep, float minDist, float 
 }
 
 float CalculateShadow(vec3 pos, vec3 lightDir) {
-    Material result = RayCast(pos, lightDir, 64, 0.01, 10.0);
+    float res = 1.0;
+    float d = 0.01;
+    for (int i = 0; i < 64; i++) {
+        float distToScene = map(pos + lightDir * d).dist;
 
-    if (result.dist >= 0.0) {
-        return 0.0;
+        if (distToScene < 0.001) {
+            return 0.0;
+        }
+
+        res = min(res, 8.0 * distToScene / d);
+        d += distToScene;
     }
 
-    return 1.0;
+    return clamp(res, 0.0, 1.0);
 }
 
 float softshadow(in vec3 ro, in vec3 rd, in float mint, in float maxt, in float k)
@@ -150,7 +167,7 @@ float softshadow(in vec3 ro, in vec3 rd, in float mint, in float maxt, in float 
 
 vec3 CalculateOrbLighting(vec3 pos, vec3 normal, vec3 lightColour, vec3 lightDir) {
     vec3 specular = vec3(0.0);
-    vec3 lightPosition = vec3(0.0, 0.0, 5.0);
+    vec3 lightPosition = vec3(0.0, 0.0, sin(u_time) * 5.0);
 
     vec3 light = lightPosition - pos;
 
@@ -160,12 +177,12 @@ vec3 CalculateOrbLighting(vec3 pos, vec3 normal, vec3 lightColour, vec3 lightDir
 
     float diffuse = saturate(dot(normal, light));
 
-    // float at = 2.0 * exp2(-2.00 * llig);
+    // float at = 2.0 * exp2(-0.1 * llig);
     // diffuse *= at;
 
     float shadow = 0.0;
-    if (diffuse > 0.01) {
-        shadow = softshadow(pos, light, 0.3, sqrt(llig), 32.0);
+    if (diffuse > 0.001) {
+        shadow = CalculateShadow(pos, normalize(light));
         diffuse *= shadow;
     }
 
@@ -174,19 +191,38 @@ vec3 CalculateOrbLighting(vec3 pos, vec3 normal, vec3 lightColour, vec3 lightDir
 }
 
 vec3 RayMarch(vec3 rayOrigin, vec3 rayDir) {
-    Material result = RayCast(rayOrigin, rayDir, 256, 0.001, 1000.0);
+    vec3 pos = vec3(0.0);
 
-    if (result.dist < 0.0) {
-        return vec3(0.0);
+    Material result = Material(0.0, vec3(1.0));
+    Material defaultResult = Material(-1.0, vec3(0.0));
+
+    for (int i = 0; i < 256; i++) {
+        pos = rayOrigin + result.dist * rayDir;
+
+        Material currentResult = map(pos);
+        result.dist += currentResult.dist;
+        result.color = currentResult.color;
+
+        if (currentResult.dist < MIN_DIST) {
+            break;
+        }
+
+        if (result.dist > 1000.0) {
+            return vec3(0.4);
+        }
     }
 
-    vec3 pos = rayOrigin + rayDir * result.dist;
     vec3 normal = CalculateNormal(pos);
-    vec3 lighting = CalculateLighting(pos, normal, vec3(1.0), vec3(1.0, 2.0, -2.0));
-    vec3 orbLighting = CalculateOrbLighting(pos, normal, vec3(1.0), vec3(0.0)); // Should be specular
-    float shadow = CalculateShadow(pos, orbLighting);
+    vec3 lightDir = normalize(vec3(0.0, 8.0, 0.0));
+    vec3 lighting = CalculateLighting(pos, normal, vec3(1.0), lightDir);
 
-    return result.color * 0.0 * lighting + (vec3(1.0) * 0.1) + 2.0 * orbLighting;
+    // vec3 orbLighting = CalculateOrbLighting(pos, normal, vec3(1.0), vec3(0.0)); // Should be specular
+    float shadow = CalculateShadow(pos, lightDir);
+    lighting *= shadow;
+
+    // return result.color * 0.0 * lighting + (vec3(1.0) * 0.1) + ((2.0 + orbLighting) * 1.0);
+    return result.color * lighting;
+    // return result.color * orbLighting;
 }
 
 void main() {
